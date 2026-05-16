@@ -71,14 +71,14 @@
   .input::placeholder{color:var(--sub)}.input:focus{border-color:var(--accent);background:rgba(129,140,248,0.06)}
   select.input{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237c7c82' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
   .btn-add{background:linear-gradient(135deg,#818cf8,#6366f1);color:#fff;border-radius:12px;padding:12px 22px;min-height:44px;font-weight:700;cursor:pointer;min-width:44px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 15px rgba(99,102,241,0.3);transition:transform .15s}.btn-add:active{transform:scale(0.95)}
-  .form-controls{display:flex;gap:6px;margin-top:10px;align-items:center;flex-wrap:wrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px}
-  .form-controls::-webkit-scrollbar{display:none}
+  .form-controls{display:flex;gap:6px;margin-top:10px;align-items:center}
+  .form-row-2{display:flex;gap:6px;margin-top:6px;align-items:center}
   .type-pills{display:flex;border-radius:10px;overflow:hidden;border:1px solid var(--border);flex-shrink:0}
-  .type-pill{padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;transition:background .15s,color .15s;min-height:34px;display:flex;align-items:center}
+  .type-pill{padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;transition:background .15s,color .15s;min-height:38px;display:flex;align-items:center}
   .type-pill.expense{color:var(--sub);background:transparent}.type-pill.expense.active{color:var(--red);background:var(--red-dim)}
   .type-pill.income{color:var(--sub);background:transparent}.type-pill.income.active{color:var(--green);background:var(--green-dim)}
   .bank-select{flex:1;min-width:0}
-  .btn-transfer{background:var(--orange-dim);color:var(--orange);border-radius:10px;padding:6px 12px;font-size:13px;font-weight:700;cursor:pointer;min-height:34px;display:flex;align-items:center;gap:4px;flex-shrink:0}.btn-transfer:active{opacity:0.7}
+  .btn-transfer{background:var(--orange-dim);color:var(--orange);border-radius:10px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;min-height:38px;display:flex;align-items:center;justify-content:center;gap:6px;width:100%}.btn-transfer:active{opacity:0.7;transform:scale(0.98)}
   .parse-preview{display:none;padding:10px 4px 2px;gap:8px;align-items:center;flex-wrap:wrap}.parse-preview.visible{display:flex}
   .parse-chip{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:600;padding:5px 10px;border-radius:8px}
   .parse-chip.amount{background:var(--green-dim);color:var(--green)}.parse-chip.desc{background:rgba(255,255,255,0.08);color:var(--text)}
@@ -112,13 +112,18 @@
   .empty-state{text-align:center;color:var(--sub);padding:48px 20px;font-size:15px}.empty-icon{font-size:44px;margin-bottom:14px;opacity:0.6}
   .rollover-info{font-size:11px;color:var(--sub);font-weight:500;text-align:center;padding:4px 0}
 
-  /* Action menu (dropdown from header) */
-  .action-menu{position:absolute;top:100%;right:0;background:rgba(30,30,35,0.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:6px;min-width:200px;z-index:50;opacity:0;pointer-events:none;transform:translateY(-8px) scale(0.95);transition:all .2s cubic-bezier(.4,0,.2,1);transform-origin:top right}
-  .action-menu.open{opacity:1;pointer-events:auto;transform:translateY(4px) scale(1)}
-  .action-menu-item{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s;color:var(--text);background:none;width:100%;text-align:left}
+  /* Action menu — bottom sheet style for mobile */
+  .menu-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:90;opacity:0;pointer-events:none;transition:opacity .2s}
+  .menu-backdrop.open{opacity:1;pointer-events:auto}
+  .action-menu{position:fixed;bottom:0;left:0;right:0;background:rgba(30,30,35,0.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid rgba(255,255,255,0.1);border-radius:20px 20px 0 0;padding:8px 16px calc(var(--safe-bottom) + 12px);z-index:91;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1)}
+  .action-menu.open{transform:translateY(0)}
+  .action-menu-handle{width:36px;height:4px;background:rgba(255,255,255,0.2);border-radius:2px;margin:0 auto 12px}
+  .action-menu-item{display:flex;align-items:center;gap:12px;padding:16px;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;transition:background .15s;color:var(--text);background:none;width:100%;text-align:left;min-height:50px}
   .action-menu-item:active{background:rgba(255,255,255,0.1)}
   .action-menu-item.danger{color:var(--red)}
-  .action-menu-item .menu-icon{font-size:16px;width:24px;text-align:center;flex-shrink:0}
+  .action-menu-item .menu-icon{font-size:20px;width:28px;text-align:center;flex-shrink:0}
+  .action-menu-cancel{display:flex;align-items:center;justify-content:center;padding:14px;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;color:var(--accent);background:var(--card2);width:100%;margin-top:8px;min-height:50px}
+  .action-menu-cancel:active{opacity:0.7}
   .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center;z-index:100;opacity:0;pointer-events:none;transition:opacity .25s;padding:0 8px calc(var(--safe-bottom) + 8px);overflow-y:auto;-webkit-overflow-scrolling:touch}.modal-overlay.active{opacity:1;pointer-events:auto}
   .modal{background:rgba(30,30,35,0.95);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border:1px solid rgba(255,255,255,0.1);border-radius:20px;width:100%;max-width:400px;padding:28px 22px;transform:translateY(30px);transition:transform .3s cubic-bezier(.4,0,.2,1);max-height:85vh;overflow-y:auto;-webkit-overflow-scrolling:touch;margin:auto 0 0}.modal-overlay.active .modal{transform:translateY(0)}
   .modal h2{font-size:19px;font-weight:700;text-align:center;margin-bottom:8px}.modal p{font-size:14px;color:var(--sub);text-align:center;margin-bottom:22px;line-height:1.5}
@@ -142,14 +147,10 @@
       <h1>EXPENSE TRACKER</h1>
       <span class="header-user" id="headerUser"></span>
     </div>
-    <div class="header-right" style="position:relative">
+    <div class="header-right">
       <button class="btn-icon" id="profileBtn">&#x1F464;</button>
       <button class="btn-icon" id="settingsBtn">&#9881;</button>
       <button class="btn-icon" id="menuBtn">&#8942;</button>
-      <div class="action-menu" id="actionMenu">
-        <button class="action-menu-item" id="resetBtn"><span class="menu-icon">&#8635;</span>Reset Month &amp; Add Salary</button>
-        <button class="action-menu-item danger" id="nukeBtn"><span class="menu-icon">&#x1F5D1;</span>Reset Everything</button>
-      </div>
     </div>
   </div>
   <div class="rollover-info" id="rolloverInfo"></div>
@@ -159,11 +160,19 @@
     <div class="bank-strip" id="bankStrip"></div>
     <div class="budget-display"><div class="budget-row"><span class="budget-label">Total Budget</span><span class="budget-value" id="totalBudget"></span></div><div class="budget-row"><span class="budget-label">Spent</span><span class="budget-value spent" id="totalSpent"></span></div><div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div><div class="budget-row" style="margin-top:10px"><span class="budget-label">Remaining</span><span class="budget-value remaining" id="remaining"></span></div></div>
     <div class="insights-section" id="insightsSection"></div>
-    <div class="form-card"><div class="smart-row"><input type="text" class="input" id="smartInput" placeholder="e.g. chai 30 SBI or uber 250" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"><button class="btn-add" id="addBtn">Add</button></div><div class="form-controls"><div class="type-pills"><div class="type-pill expense active" id="pillExpense">Expense</div><div class="type-pill income" id="pillIncome">Income</div></div><div class="bank-select" id="bankSelectWrap"></div><button class="btn-transfer" id="transferBtn">&#8646; Transfer</button></div><div class="parse-preview" id="parsePreview"><span class="parse-chip amount" id="previewAmt"></span><span class="parse-chip desc" id="previewDesc"></span><span class="parse-chip category" id="previewCat"></span><span class="parse-chip bank-tag" id="previewBank" style="display:none"></span></div><div class="cat-override" id="catOverride"><select class="input" id="catSelect"><option value="Food">&#x1F354; Food</option><option value="Shopping">&#x1F6CD;&#xFE0F; Shopping</option><option value="Bills">&#x1F4C4; Bills</option><option value="Transport">&#x1F697; Transport</option><option value="Health">&#x1F48A; Health</option><option value="Entertainment">&#x1F3AC; Entertainment</option><option value="Others">&#x1F4E6; Others</option></select></div></div>
+    <div class="form-card"><div class="smart-row"><input type="text" class="input" id="smartInput" placeholder="e.g. chai 30 SBI or uber 250" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"><button class="btn-add" id="addBtn">Add</button></div><div class="form-controls"><div class="type-pills"><div class="type-pill expense active" id="pillExpense">Expense</div><div class="type-pill income" id="pillIncome">Income</div></div><div class="bank-select" id="bankSelectWrap"></div></div><div class="form-row-2"><button class="btn-transfer" id="transferBtn">&#8646; Transfer Between Accounts</button></div><div class="parse-preview" id="parsePreview"><span class="parse-chip amount" id="previewAmt"></span><span class="parse-chip desc" id="previewDesc"></span><span class="parse-chip category" id="previewCat"></span><span class="parse-chip bank-tag" id="previewBank" style="display:none"></span></div><div class="cat-override" id="catOverride"><select class="input" id="catSelect"><option value="Food">&#x1F354; Food</option><option value="Shopping">&#x1F6CD;&#xFE0F; Shopping</option><option value="Bills">&#x1F4C4; Bills</option><option value="Transport">&#x1F697; Transport</option><option value="Health">&#x1F48A; Health</option><option value="Entertainment">&#x1F3AC; Entertainment</option><option value="Others">&#x1F4E6; Others</option></select></div></div>
     <div class="list-header">This Month's Expenses</div>
     <div class="filter-section"><div class="search-row"><input type="text" class="search-input" id="searchInput" placeholder="&#x1F50D; Search expenses..." autocomplete="off" autocorrect="off"></div><div class="filter-pills" id="filterPills"></div><div class="filter-count" id="filterCount"></div></div>
     <div class="expense-list" id="expenseList"></div>
   </div>
+</div>
+
+<div class="menu-backdrop" id="menuBackdrop"></div>
+<div class="action-menu" id="actionMenu">
+  <div class="action-menu-handle"></div>
+  <button class="action-menu-item" id="resetBtn"><span class="menu-icon">&#8635;</span>Reset Month &amp; Add Salary</button>
+  <button class="action-menu-item danger" id="nukeBtn"><span class="menu-icon">&#x1F5D1;</span>Reset Everything</button>
+  <button class="action-menu-cancel" id="menuCancel">Cancel</button>
 </div>
 
 <div class="modal-overlay" id="onboardModal"><div class="modal" style="text-align:center"><h2>&#x1F44B; Welcome!</h2><p>Let's set up your profile.</p><label>Your Name</label><input type="text" class="input" id="onboardName" placeholder="e.g. Manika"><div class="modal-buttons"><button class="btn-confirm" id="onboardConfirm">Get Started</button></div></div></div>
