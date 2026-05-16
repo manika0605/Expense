@@ -24,16 +24,16 @@
     --cat-food:#fb923c;--cat-shopping:#f472b6;--cat-bills:#60a5fa;
     --cat-transport:#a78bfa;--cat-health:#34d399;--cat-entertainment:#fbbf24;--cat-others:#94a3b8;
   }
-  html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',system-ui,sans-serif;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
-  body{padding-top:calc(var(--safe-top) + 12px);padding-bottom:calc(var(--safe-bottom) + 12px);display:flex;flex-direction:column;background:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(129,140,248,0.12),transparent),var(--bg)}
+  html,body{height:100%;overflow:hidden}
+  body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',system-ui,sans-serif;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent;padding-top:calc(var(--safe-top) + 8px);padding-bottom:var(--safe-bottom);background-image:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(129,140,248,0.12),transparent);display:flex;flex-direction:column}
   .container{width:100%;max-width:430px;margin:0 auto;padding:0 16px;flex:1;display:flex;flex-direction:column;overflow:hidden}
   .hidden{display:none !important}
   .loading-screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);z-index:200;gap:16px}
   .loading-spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
   .loading-text{font-size:14px;color:var(--sub);font-weight:500}
-  .header{display:flex;justify-content:space-between;align-items:center;padding:8px 0 18px}
-  .header-left{display:flex;align-items:center;gap:10px}
+  .header{display:flex;justify-content:space-between;align-items:center;padding:6px 0 10px;flex-shrink:0}
+  .header-left{display:flex;align-items:center;gap:8px;min-width:0}
   .header h1{font-size:13px;font-weight:700;letter-spacing:1.5px;color:var(--sub);text-transform:uppercase}
   .header-user{font-size:12px;font-weight:600;color:var(--accent);background:var(--accent-dim);padding:3px 8px;border-radius:6px;cursor:pointer}
   .header-user:active{opacity:0.7}
@@ -42,17 +42,17 @@
   .btn-icon:active{background:var(--card2)}
   .bank-strip{display:flex;gap:8px;overflow-x:auto;padding:0 0 12px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
   .bank-strip::-webkit-scrollbar{display:none}
-  .bank-chip{flex-shrink:0;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:8px 12px;min-width:80px;text-align:center}
-  .bank-chip-name{font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:0.5px}
-  .bank-chip-bal{font-size:14px;font-weight:700;margin-top:2px}
+  .bank-chip{flex-shrink:0;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:8px 12px;min-width:80px;max-width:140px;text-align:center}
+  .bank-chip-name{font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:0.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .bank-chip-bal{font-size:13px;font-weight:700;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .bank-chip-bal.negative{color:var(--red)}
   .budget-display{background:linear-gradient(135deg,rgba(129,140,248,0.13),rgba(52,211,153,0.08));backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:22px 20px;margin-bottom:14px;position:relative;overflow:hidden}
   .budget-display::before{content:'';position:absolute;top:-40%;right:-20%;width:200px;height:200px;background:radial-gradient(circle,rgba(129,140,248,0.15),transparent 70%);pointer-events:none}
   .budget-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;position:relative}
   .budget-row:last-child{margin-bottom:0}
   .budget-label{font-size:12px;color:var(--sub);font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
-  .budget-value{font-size:17px;font-weight:600;color:rgba(255,255,255,0.85)}
-  .budget-value.remaining{color:var(--green);font-size:32px;font-weight:800;letter-spacing:-0.5px}
+  .budget-value{font-size:17px;font-weight:600;color:rgba(255,255,255,0.85);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%}
+  .budget-value.remaining{color:var(--green);font-size:28px;font-weight:800;letter-spacing:-0.5px;max-width:65%}
   .budget-value.remaining.negative{color:var(--red)}
   .budget-value.spent{color:var(--sub)}
   .progress-bar{height:6px;background:rgba(255,255,255,0.06);border-radius:3px;margin:16px 0 6px;overflow:hidden}
@@ -71,7 +71,8 @@
   .input::placeholder{color:var(--sub)}.input:focus{border-color:var(--accent);background:rgba(129,140,248,0.06)}
   select.input{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237c7c82' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
   .btn-add{background:linear-gradient(135deg,#818cf8,#6366f1);color:#fff;border-radius:12px;padding:12px 22px;min-height:44px;font-weight:700;cursor:pointer;min-width:44px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 15px rgba(99,102,241,0.3);transition:transform .15s}.btn-add:active{transform:scale(0.95)}
-  .form-controls{display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap}
+  .form-controls{display:flex;gap:6px;margin-top:10px;align-items:center;flex-wrap:wrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px}
+  .form-controls::-webkit-scrollbar{display:none}
   .type-pills{display:flex;border-radius:10px;overflow:hidden;border:1px solid var(--border);flex-shrink:0}
   .type-pill{padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;transition:background .15s,color .15s;min-height:34px;display:flex;align-items:center}
   .type-pill.expense{color:var(--sub);background:transparent}.type-pill.expense.active{color:var(--red);background:var(--red-dim)}
@@ -92,8 +93,13 @@
   .filter-pill{flex-shrink:0;padding:5px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;background:rgba(255,255,255,0.06);color:var(--sub);border:1px solid transparent;transition:all .15s}.filter-pill.active{color:var(--accent);background:var(--accent-dim);border-color:rgba(129,140,248,0.3)}.filter-pill:active{transform:scale(0.95)}
   .filter-count{font-size:11px;color:var(--sub);padding:0 4px;font-weight:500;margin-bottom:6px}
   .list-header{font-size:12px;color:var(--sub);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;padding:0 4px}
-  .expense-list{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px}.expense-list::-webkit-scrollbar{width:0;height:0}
-  .expense-item{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px 14px 14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;transition:transform .15s}.expense-item:active{transform:scale(0.98)}
+  .scroll-area{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:20px;min-height:0}
+  .scroll-area::-webkit-scrollbar{width:4px}
+  .scroll-area::-webkit-scrollbar-track{background:transparent}
+  .scroll-area::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:2px}
+  .scroll-area::-webkit-scrollbar-thumb:active{background:rgba(255,255,255,0.3)}
+  .expense-list{padding-bottom:8px}
+  .expense-item{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:12px 10px 12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;transition:transform .15s,background .15s}.expense-item:active{transform:scale(0.97);background:rgba(255,255,255,0.1)}
   .expense-item.credit{border-color:rgba(52,211,153,0.2);background:rgba(52,211,153,0.04)}.expense-item.credit .expense-amount{color:var(--green)}
   .expense-item.transfer{border-color:rgba(251,146,60,0.2);background:rgba(251,146,60,0.04)}.expense-item.transfer .expense-amount{color:var(--orange)}
   .expense-cat-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
@@ -101,15 +107,20 @@
   .expense-info{flex:1;min-width:0}.expense-desc{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .expense-meta{font-size:12px;color:var(--sub);margin-top:3px;font-weight:500;display:flex;gap:6px;align-items:center}
   .expense-bank-tag{font-size:10px;font-weight:700;background:var(--accent-dim);color:var(--accent);padding:1px 5px;border-radius:4px}
-  .expense-amount{font-size:16px;font-weight:700;flex-shrink:0;margin-right:2px;letter-spacing:-0.3px}
-  .btn-delete{width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:none;color:var(--sub);font-size:16px;cursor:pointer;border-radius:12px;flex-shrink:0;transition:color .15s,background .15s}.btn-delete:active{background:var(--red-dim);color:var(--red)}
+  .expense-amount{font-size:15px;font-weight:700;flex-shrink:0;margin-right:2px;letter-spacing:-0.3px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .btn-delete{width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:var(--card2);color:var(--sub);font-size:14px;cursor:pointer;border-radius:10px;flex-shrink:0;transition:all .15s}.btn-delete:active{background:var(--red-dim);color:var(--red);transform:scale(0.9)}
   .empty-state{text-align:center;color:var(--sub);padding:48px 20px;font-size:15px}.empty-icon{font-size:44px;margin-bottom:14px;opacity:0.6}
-  .monthly-section{padding:14px 0;border-top:1px solid var(--border);margin-top:8px}
-  .btn-reset{width:100%;background:var(--accent-dim);color:var(--accent);border-radius:14px;padding:14px;min-height:50px;font-size:15px;font-weight:700;cursor:pointer;border:1px solid rgba(129,140,248,0.2);transition:transform .15s}.btn-reset:active{transform:scale(0.98)}
-  .btn-nuke{width:100%;background:var(--red-dim);color:var(--red);border-radius:14px;padding:12px;min-height:44px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid rgba(248,113,113,0.2);transition:transform .15s;margin-top:8px}.btn-nuke:active{transform:scale(0.98)}
-  .rollover-info{text-align:center;font-size:12px;color:var(--sub);margin-top:10px;font-weight:500}
-  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center;z-index:100;opacity:0;pointer-events:none;transition:opacity .25s;padding:0 8px calc(var(--safe-bottom) + 8px)}.modal-overlay.active{opacity:1;pointer-events:auto}
-  .modal{background:rgba(30,30,35,0.95);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border:1px solid rgba(255,255,255,0.1);border-radius:20px;width:100%;max-width:400px;padding:28px 22px;transform:translateY(30px);transition:transform .3s cubic-bezier(.4,0,.2,1)}.modal-overlay.active .modal{transform:translateY(0)}
+  .rollover-info{font-size:11px;color:var(--sub);font-weight:500;text-align:center;padding:4px 0}
+
+  /* Action menu (dropdown from header) */
+  .action-menu{position:absolute;top:100%;right:0;background:rgba(30,30,35,0.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:6px;min-width:200px;z-index:50;opacity:0;pointer-events:none;transform:translateY(-8px) scale(0.95);transition:all .2s cubic-bezier(.4,0,.2,1);transform-origin:top right}
+  .action-menu.open{opacity:1;pointer-events:auto;transform:translateY(4px) scale(1)}
+  .action-menu-item{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s;color:var(--text);background:none;width:100%;text-align:left}
+  .action-menu-item:active{background:rgba(255,255,255,0.1)}
+  .action-menu-item.danger{color:var(--red)}
+  .action-menu-item .menu-icon{font-size:16px;width:24px;text-align:center;flex-shrink:0}
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center;z-index:100;opacity:0;pointer-events:none;transition:opacity .25s;padding:0 8px calc(var(--safe-bottom) + 8px);overflow-y:auto;-webkit-overflow-scrolling:touch}.modal-overlay.active{opacity:1;pointer-events:auto}
+  .modal{background:rgba(30,30,35,0.95);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border:1px solid rgba(255,255,255,0.1);border-radius:20px;width:100%;max-width:400px;padding:28px 22px;transform:translateY(30px);transition:transform .3s cubic-bezier(.4,0,.2,1);max-height:85vh;overflow-y:auto;-webkit-overflow-scrolling:touch;margin:auto 0 0}.modal-overlay.active .modal{transform:translateY(0)}
   .modal h2{font-size:19px;font-weight:700;text-align:center;margin-bottom:8px}.modal p{font-size:14px;color:var(--sub);text-align:center;margin-bottom:22px;line-height:1.5}
   .modal .input{width:100%;margin-bottom:14px}.modal label{display:block;font-size:12px;color:var(--sub);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
   .modal-buttons{display:flex;gap:10px;margin-top:6px}.modal-buttons button{flex:1;min-height:50px;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;transition:transform .15s}.modal-buttons button:active{transform:scale(0.97)}
@@ -125,15 +136,34 @@
 <body>
 <div class="loading-screen" id="loadingScreen"><div class="loading-spinner"></div><div class="loading-text">Loading database...</div></div>
 <div class="container hidden" id="appContainer">
-  <div class="header"><div class="header-left"><h1>EXPENSE TRACKER</h1><span class="header-user" id="headerUser"></span></div><div class="header-right"><button class="btn-icon" id="profileBtn">&#x1F464;</button><button class="btn-icon" id="settingsBtn">&#9881;</button></div></div>
-  <div class="bank-strip" id="bankStrip"></div>
-  <div class="budget-display"><div class="budget-row"><span class="budget-label">Total Budget</span><span class="budget-value" id="totalBudget"></span></div><div class="budget-row"><span class="budget-label">Spent</span><span class="budget-value spent" id="totalSpent"></span></div><div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div><div class="budget-row" style="margin-top:10px"><span class="budget-label">Remaining</span><span class="budget-value remaining" id="remaining"></span></div></div>
-  <div class="insights-section" id="insightsSection"></div>
-  <div class="form-card"><div class="smart-row"><input type="text" class="input" id="smartInput" placeholder="e.g. chai 30 SBI or uber 250" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"><button class="btn-add" id="addBtn">Add</button></div><div class="form-controls"><div class="type-pills"><div class="type-pill expense active" id="pillExpense">Expense</div><div class="type-pill income" id="pillIncome">Income</div></div><div class="bank-select" id="bankSelectWrap"></div><button class="btn-transfer" id="transferBtn">&#8646; Transfer</button></div><div class="parse-preview" id="parsePreview"><span class="parse-chip amount" id="previewAmt"></span><span class="parse-chip desc" id="previewDesc"></span><span class="parse-chip category" id="previewCat"></span><span class="parse-chip bank-tag" id="previewBank" style="display:none"></span></div><div class="cat-override" id="catOverride"><select class="input" id="catSelect"><option value="Food">&#x1F354; Food</option><option value="Shopping">&#x1F6CD;&#xFE0F; Shopping</option><option value="Bills">&#x1F4C4; Bills</option><option value="Transport">&#x1F697; Transport</option><option value="Health">&#x1F48A; Health</option><option value="Entertainment">&#x1F3AC; Entertainment</option><option value="Others">&#x1F4E6; Others</option></select></div></div>
-  <div class="list-header">This Month's Expenses</div>
-  <div class="filter-section"><div class="search-row"><input type="text" class="search-input" id="searchInput" placeholder="&#x1F50D; Search expenses..." autocomplete="off" autocorrect="off"></div><div class="filter-pills" id="filterPills"></div><div class="filter-count" id="filterCount"></div></div>
-  <div class="expense-list" id="expenseList"></div>
-  <div class="monthly-section"><button class="btn-reset" id="resetBtn">&#8635; Reset Month &amp; Add Salary</button><button class="btn-nuke" id="nukeBtn">&#x1F5D1; Reset Everything &amp; Start Fresh</button><div class="rollover-info" id="rolloverInfo"></div></div>
+  <!-- Fixed Header -->
+  <div class="header">
+    <div class="header-left">
+      <h1>EXPENSE TRACKER</h1>
+      <span class="header-user" id="headerUser"></span>
+    </div>
+    <div class="header-right" style="position:relative">
+      <button class="btn-icon" id="profileBtn">&#x1F464;</button>
+      <button class="btn-icon" id="settingsBtn">&#9881;</button>
+      <button class="btn-icon" id="menuBtn">&#8942;</button>
+      <div class="action-menu" id="actionMenu">
+        <button class="action-menu-item" id="resetBtn"><span class="menu-icon">&#8635;</span>Reset Month &amp; Add Salary</button>
+        <button class="action-menu-item danger" id="nukeBtn"><span class="menu-icon">&#x1F5D1;</span>Reset Everything</button>
+      </div>
+    </div>
+  </div>
+  <div class="rollover-info" id="rolloverInfo"></div>
+
+  <!-- Scrollable Content -->
+  <div class="scroll-area">
+    <div class="bank-strip" id="bankStrip"></div>
+    <div class="budget-display"><div class="budget-row"><span class="budget-label">Total Budget</span><span class="budget-value" id="totalBudget"></span></div><div class="budget-row"><span class="budget-label">Spent</span><span class="budget-value spent" id="totalSpent"></span></div><div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div><div class="budget-row" style="margin-top:10px"><span class="budget-label">Remaining</span><span class="budget-value remaining" id="remaining"></span></div></div>
+    <div class="insights-section" id="insightsSection"></div>
+    <div class="form-card"><div class="smart-row"><input type="text" class="input" id="smartInput" placeholder="e.g. chai 30 SBI or uber 250" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"><button class="btn-add" id="addBtn">Add</button></div><div class="form-controls"><div class="type-pills"><div class="type-pill expense active" id="pillExpense">Expense</div><div class="type-pill income" id="pillIncome">Income</div></div><div class="bank-select" id="bankSelectWrap"></div><button class="btn-transfer" id="transferBtn">&#8646; Transfer</button></div><div class="parse-preview" id="parsePreview"><span class="parse-chip amount" id="previewAmt"></span><span class="parse-chip desc" id="previewDesc"></span><span class="parse-chip category" id="previewCat"></span><span class="parse-chip bank-tag" id="previewBank" style="display:none"></span></div><div class="cat-override" id="catOverride"><select class="input" id="catSelect"><option value="Food">&#x1F354; Food</option><option value="Shopping">&#x1F6CD;&#xFE0F; Shopping</option><option value="Bills">&#x1F4C4; Bills</option><option value="Transport">&#x1F697; Transport</option><option value="Health">&#x1F48A; Health</option><option value="Entertainment">&#x1F3AC; Entertainment</option><option value="Others">&#x1F4E6; Others</option></select></div></div>
+    <div class="list-header">This Month's Expenses</div>
+    <div class="filter-section"><div class="search-row"><input type="text" class="search-input" id="searchInput" placeholder="&#x1F50D; Search expenses..." autocomplete="off" autocorrect="off"></div><div class="filter-pills" id="filterPills"></div><div class="filter-count" id="filterCount"></div></div>
+    <div class="expense-list" id="expenseList"></div>
+  </div>
 </div>
 
 <div class="modal-overlay" id="onboardModal"><div class="modal" style="text-align:center"><h2>&#x1F44B; Welcome!</h2><p>Let's set up your profile.</p><label>Your Name</label><input type="text" class="input" id="onboardName" placeholder="e.g. Manika"><div class="modal-buttons"><button class="btn-confirm" id="onboardConfirm">Get Started</button></div></div></div>
