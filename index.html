@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Learn Claude & Claude Code</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <nav id="navbar">
+    <div class="nav-container">
+      <a href="#hero" class="logo">Claude Learning</a>
+      <ul class="nav-links">
+        <li><a href="#what-is-claude">What is Claude</a></li>
+        <li><a href="#models">Models</a></li>
+        <li><a href="#claude-code">Claude Code</a></li>
+        <li><a href="#deep-dive">Deep Dive</a></li>
+        <li><a href="#api">API</a></li>
+        <li><a href="#prompting">Prompting</a></li>
+        <li><a href="#resources">Resources</a></li>
+      </ul>
+      <button class="nav-toggle" aria-label="Toggle navigation">&#9776;</button>
+    </div>
+  </nav>
+
+  <header id="hero">
+    <div class="hero-content">
+      <h1>Learn Claude & Claude Code</h1>
+      <p>Your guide to understanding and working with Anthropic's AI assistant</p>
+      <a href="#what-is-claude" class="cta-button">Get Started</a>
+    </div>
+  </header>
+
+  <main>
+    <!-- What is Claude -->
+    <section id="what-is-claude" class="section">
+      <div class="container">
+        <h2>What is Claude?</h2>
+        <div class="card-grid">
+          <div class="card">
+            <div class="card-icon">&#129302;</div>
+            <h3>AI Assistant</h3>
+            <p>Claude is an AI assistant built by Anthropic. It can help with writing, analysis, coding, math, reasoning, and much more. It's designed to be helpful, harmless, and honest.</p>
+          </div>
+          <div class="card">
+            <div class="card-icon">&#128274;</div>
+            <h3>Safety-First Design</h3>
+            <p>Anthropic focuses on AI safety research. Claude is built with Constitutional AI principles, making it more reliable, interpretable, and steerable than many alternatives.</p>
+          </div>
+          <div class="card">
+            <div class="card-icon">&#128640;</div>
+            <h3>Capabilities</h3>
+            <ul>
+              <li>Natural language understanding & generation</li>
+              <li>Code writing, review, and debugging</li>
+              <li>Data analysis and reasoning</li>
+              <li>Document summarization</li>
+              <li>Creative and technical writing</li>
+              <li>Multi-turn conversation with context</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Models -->
+    <section id="models" class="section section-alt">
+      <div class="container">
+        <h2>Claude Model Family</h2>
+        <p class="section-subtitle">Choose the right model for your use case</p>
+        <div class="model-table-wrapper">
+          <table class="model-table">
+            <thead>
+              <tr>
+                <th>Model</th>
+                <th>Best For</th>
+                <th>Speed</th>
+                <th>Intelligence</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Opus 4.6</strong></td>
+                <td>Complex reasoning, coding, deep analysis</td>
+                <td><span class="bar bar-2"></span></td>
+                <td><span class="bar bar-5"></span></td>
+              </tr>
+              <tr>
+                <td><strong>Sonnet 4.6</strong></td>
+                <td>Balanced performance for most tasks</td>
+                <td><span class="bar bar-4"></span></td>
+                <td><span class="bar bar-4"></span></td>
+              </tr>
+              <tr>
+                <td><strong>Haiku 4.5</strong></td>
+                <td>Fast responses, simple tasks, high volume</td>
+                <td><span class="bar bar-5"></span></td>
+                <td><span class="bar bar-3"></span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="tip-box">
+          <strong>Tip:</strong> When building AI applications, default to the latest and most capable Claude models. Use Haiku for latency-sensitive or high-volume tasks where cost matters.
+        </div>
+      </div>
+    </section>
+
+    <!-- Claude Code -->
+    <section id="claude-code" class="section">
+      <div class="container">
+        <h2>Claude Code</h2>
+        <p class="section-subtitle">Anthropic's official agentic coding tool</p>
+
+        <div class="card-grid">
+          <div class="card">
+            <div class="card-icon">&#128187;</div>
+            <h3>What is Claude Code?</h3>
+            <p>Claude Code is an agentic coding tool that lives in your terminal and IDE. It understands your entire codebase, can execute commands, edit files, and help you build software end-to-end.</p>
+          </div>
+          <div class="card">
+            <div class="card-icon">&#9997;&#65039;</div>
+            <h3>Available Everywhere</h3>
+            <ul>
+              <li>CLI in the terminal</li>
+              <li>Desktop app (Mac/Windows)</li>
+              <li>Web app (claude.ai/code)</li>
+              <li>VS Code extension</li>
+              <li>JetBrains extension</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-icon">&#128736;</div>
+            <h3>Key Features</h3>
+            <ul>
+              <li>Read, search, and edit files</li>
+              <li>Run terminal commands</li>
+              <li>Git operations (commits, PRs)</li>
+              <li>Multi-file refactoring</li>
+              <li>Test writing and debugging</li>
+              <li>Codebase exploration</li>
+            </ul>
+          </div>
+        </div>
+
+        <h3 class="subsection-title">Essential Slash Commands</h3>
+        <div class="commands-grid">
+          <div class="command-item">
+            <code>/help</code>
+            <span>Get help with Claude Code</span>
+          </div>
+          <div class="command-item">
+            <code>/commit</code>
+            <span>Create a git commit with a generated message</span>
+          </div>
+          <div class="command-item">
+            <code>/review-pr</code>
+            <span>Review a pull request</span>
+          </div>
+          <div class="command-item">
+            <code>/fast</code>
+            <span>Toggle fast mode (same model, faster output)</span>
+          </div>
+          <div class="command-item">
+            <code>/clear</code>
+            <span>Clear conversation context</span>
+          </div>
+          <div class="command-item">
+            <code>/help</code>
+            <span>Show available commands and usage info</span>
+          </div>
+        </div>
+
+        <h3 class="subsection-title">CLAUDE.md - Project Instructions</h3>
+        <div class="code-block">
+          <div class="code-header">CLAUDE.md</div>
+          <pre><code># My Project
+
+## Build & Test
+- Build: `npm run build`
+- Test: `npm test`
+- Lint: `npm run lint`
+
+## Code Style
+- Use TypeScript strict mode
+- Prefer functional components
+- Write tests for all new features</code></pre>
+        </div>
+        <p class="note">Place a <code>CLAUDE.md</code> file in your project root to give Claude Code persistent instructions about your project's conventions, build commands, and preferences.</p>
+      </div>
+    </section>
+
+    <!-- Deep Dive: .claude, CLAUDE.md, Skills, Agents -->
+    <section id="deep-dive" class="section section-alt">
+      <div class="container">
+        <h2>Claude Code Deep Dive</h2>
+        <p class="section-subtitle">Understand the core concepts that power your Claude Code workflow</p>
+
+        <!-- .claude Directory -->
+        <div class="deep-dive-block">
+          <div class="deep-dive-header">
+            <span class="deep-dive-icon">&#128193;</span>
+            <h3>.claude Directory</h3>
+          </div>
+          <p>The <code>.claude/</code> directory is Claude Code's configuration home. It lives at <code>~/.claude/</code> globally and can also exist per-project. It stores your settings, memory, and customizations.</p>
+          <div class="file-tree">
+            <div class="file-tree-title">~/.claude/</div>
+            <ul>
+              <li><span class="tree-file">settings.json</span> &mdash; Global settings, permissions, and hook definitions</li>
+              <li><span class="tree-folder">projects/</span> &mdash; Per-project memory and configuration
+                <ul>
+                  <li><span class="tree-folder">&lt;project-path&gt;/</span>
+                    <ul>
+                      <li><span class="tree-file">CLAUDE.md</span> &mdash; User-level project instructions (not committed to git)</li>
+                      <li><span class="tree-folder">memory/</span> &mdash; Persistent memory files Claude saves across sessions</li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+              <li><span class="tree-file">keybindings.json</span> &mdash; Custom keyboard shortcuts</li>
+            </ul>
+          </div>
+          <div class="tip-box">
+            <strong>Key point:</strong> The global <code>~/.claude/</code> directory stores your personal preferences, while project-level <code>.claude/</code> directories keep project-specific context. Settings in <code>settings.json</code> control permissions, hooks, and automated behaviors.
+          </div>
+        </div>
+
+        <!-- CLAUDE.md -->
+        <div class="deep-dive-block">
+          <div class="deep-dive-header">
+            <span class="deep-dive-icon">&#128221;</span>
+            <h3>CLAUDE.md Files</h3>
+          </div>
+          <p>CLAUDE.md is your way of giving Claude Code persistent instructions. Think of it as a README that Claude reads every time it starts a conversation in your project.</p>
+
+          <div class="claude-md-levels">
+            <div class="level-card">
+              <h4>Project Root</h4>
+              <code>./CLAUDE.md</code>
+              <p>Checked into git. Shared with your team. Contains build commands, code style rules, and project conventions.</p>
+            </div>
+            <div class="level-card">
+              <h4>User-level (per project)</h4>
+              <code>~/.claude/projects/.../CLAUDE.md</code>
+              <p>Personal and not committed. Your own preferences, shortcuts, or overrides for this project.</p>
+            </div>
+            <div class="level-card">
+              <h4>Subdirectory</h4>
+              <code>./src/CLAUDE.md</code>
+              <p>Scoped instructions for a subdirectory. Claude loads these when working in that folder.</p>
+            </div>
+          </div>
+
+          <h4 class="example-title">What to put in CLAUDE.md</h4>
+          <div class="code-block">
+            <div class="code-header">CLAUDE.md</div>
+            <pre><code># My Project
+
+## Build & Test Commands
+- Build: `npm run build`
+- Test single file: `npm test -- path/to/file.test.ts`
+- Lint: `npm run lint -- --fix`
+
+## Code Conventions
+- Use TypeScript strict mode everywhere
+- Prefer functional React components with hooks
+- Name files in kebab-case (e.g., user-profile.tsx)
+- All API responses must use the Result&lt;T&gt; type
+
+## Architecture Notes
+- /src/api/ — REST handlers (Express)
+- /src/services/ — Business logic layer
+- /src/db/ — Prisma models and migrations
+
+## Things to Avoid
+- Never use `any` type
+- Don't add console.log in production code
+- Don't modify generated files in /src/generated/</code></pre>
+          </div>
+        </div>
+
+        <!-- Skills -->
+        <div class="deep-dive-block">
+          <div class="deep-dive-header">
+            <span class="deep-dive-icon">&#9889;</span>
+            <h3>Skills (Slash Commands)</h3>
+          </div>
+          <p>Skills are reusable prompt templates that you invoke with slash commands. They encapsulate complex workflows into simple one-liners, turning multi-step tasks into a single command.</p>
+
+          <div class="skill-grid">
+            <div class="skill-card">
+              <div class="skill-name"><code>/commit</code></div>
+              <div class="skill-desc">Analyzes your staged changes and creates a well-formatted git commit with an auto-generated message.</div>
+              <div class="skill-tag">Built-in</div>
+            </div>
+            <div class="skill-card">
+              <div class="skill-name"><code>/review-pr</code></div>
+              <div class="skill-desc">Reviews a pull request for bugs, security issues, code quality, and provides actionable feedback.</div>
+              <div class="skill-tag">Built-in</div>
+            </div>
+            <div class="skill-card">
+              <div class="skill-name"><code>/fast</code></div>
+              <div class="skill-desc">Toggles fast mode — same Opus model but with faster output. Great for quick tasks.</div>
+              <div class="skill-tag">Built-in</div>
+            </div>
+            <div class="skill-card">
+              <div class="skill-name"><code>/simplify</code></div>
+              <div class="skill-desc">Reviews changed code for reuse, quality, and efficiency, then fixes any issues found.</div>
+              <div class="skill-tag">Custom</div>
+            </div>
+          </div>
+
+          <h4 class="example-title">How Skills Work</h4>
+          <div class="how-it-works">
+            <div class="step">
+              <div class="step-num">1</div>
+              <div class="step-text">You type a slash command like <code>/commit</code></div>
+            </div>
+            <div class="step">
+              <div class="step-num">2</div>
+              <div class="step-text">Claude Code expands it into a full detailed prompt behind the scenes</div>
+            </div>
+            <div class="step">
+              <div class="step-num">3</div>
+              <div class="step-text">Claude executes the task using the expanded instructions, tools, and context</div>
+            </div>
+          </div>
+
+          <div class="tip-box">
+            <strong>Tip:</strong> You can create custom skills for your team's workflows — deploy scripts, test runners, code review checklists, and more. Skills are defined as prompt templates and registered in your configuration.
+          </div>
+        </div>
+
+        <!-- Agents -->
+        <div class="deep-dive-block">
+          <div class="deep-dive-header">
+            <span class="deep-dive-icon">&#129302;</span>
+            <h3>Agents (Sub-agents)</h3>
+          </div>
+          <p>Agents are specialized Claude instances that can be spawned to handle specific tasks in parallel. They run independently with their own context and tools, then report back results.</p>
+
+          <div class="agent-grid">
+            <div class="agent-card">
+              <h4>Explore Agent</h4>
+              <p>Fast codebase exploration — find files by patterns, search for keywords, answer structural questions about the code.</p>
+              <div class="agent-use-case">Use for: "How do API endpoints work in this project?"</div>
+            </div>
+            <div class="agent-card">
+              <h4>Plan Agent</h4>
+              <p>Software architect agent that designs implementation strategies, identifies critical files, and considers trade-offs.</p>
+              <div class="agent-use-case">Use for: "Plan how to add authentication to this app"</div>
+            </div>
+            <div class="agent-card">
+              <h4>Code Review Agent</h4>
+              <p>Thorough code reviewer that catches bugs, security issues, and over-engineering. Uses deeper analysis.</p>
+              <div class="agent-use-case">Use for: "Review my changes before I push"</div>
+            </div>
+            <div class="agent-card">
+              <h4>General Purpose Agent</h4>
+              <p>Handles complex, multi-step tasks. Can search code, read files, run commands — a full-powered Claude in a sandbox.</p>
+              <div class="agent-use-case">Use for: "Research how error handling works across the codebase"</div>
+            </div>
+          </div>
+
+          <h4 class="example-title">Why Agents?</h4>
+          <div class="agent-benefits">
+            <div class="benefit">
+              <strong>Parallelism</strong>
+              <p>Multiple agents can run at the same time, speeding up research and multi-part tasks.</p>
+            </div>
+            <div class="benefit">
+              <strong>Isolation</strong>
+              <p>Each agent has its own context window, keeping the main conversation clean and focused.</p>
+            </div>
+            <div class="benefit">
+              <strong>Specialization</strong>
+              <p>Different agent types have different tools and strengths — the right agent for the right job.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- API Section -->
+    <section id="api" class="section">
+      <div class="container">
+        <h2>Claude API Basics</h2>
+        <p class="section-subtitle">Build AI-powered applications with the Anthropic API</p>
+
+        <div class="card-grid two-col">
+          <div class="card">
+            <h3>Python SDK</h3>
+            <div class="code-block">
+              <div class="code-header">Python</div>
+              <pre><code>import anthropic
+
+client = anthropic.Anthropic()
+
+message = client.messages.create(
+    model="claude-sonnet-4-6-20250415",
+    max_tokens=1024,
+    messages=[
+        {"role": "user",
+         "content": "Hello, Claude!"}
+    ]
+)
+
+print(message.content[0].text)</code></pre>
+            </div>
+          </div>
+          <div class="card">
+            <h3>TypeScript SDK</h3>
+            <div class="code-block">
+              <div class="code-header">TypeScript</div>
+              <pre><code>import Anthropic from "@anthropic-ai/sdk";
+
+const client = new Anthropic();
+
+const message = await client.messages.create({
+  model: "claude-sonnet-4-6-20250415",
+  max_tokens: 1024,
+  messages: [
+    { role: "user",
+      content: "Hello, Claude!" }
+  ],
+});
+
+console.log(message.content[0].text);</code></pre>
+            </div>
+          </div>
+        </div>
+
+        <h3 class="subsection-title">Key API Concepts</h3>
+        <div class="concept-list">
+          <details class="concept">
+            <summary>Messages API</summary>
+            <p>The primary way to interact with Claude. Send a list of messages (user/assistant turns) and receive a response. Supports streaming for real-time output.</p>
+          </details>
+          <details class="concept">
+            <summary>System Prompts</summary>
+            <p>Set the behavior, personality, and constraints for Claude using a system prompt. This guides how Claude responds across the entire conversation.</p>
+          </details>
+          <details class="concept">
+            <summary>Tool Use (Function Calling)</summary>
+            <p>Define tools that Claude can call to interact with external systems - APIs, databases, calculators, etc. Claude decides when to use them and structures the arguments.</p>
+          </details>
+          <details class="concept">
+            <summary>Vision (Multimodal)</summary>
+            <p>Claude can analyze images passed in messages. Useful for understanding screenshots, diagrams, charts, documents, and more.</p>
+          </details>
+          <details class="concept">
+            <summary>Prompt Caching</summary>
+            <p>Cache frequently used prompt prefixes (like system prompts or large context) to reduce latency and cost on subsequent requests.</p>
+          </details>
+          <details class="concept">
+            <summary>Extended Thinking</summary>
+            <p>Enable Claude to think step-by-step before responding, improving performance on complex reasoning, math, and coding tasks.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- Prompting Tips -->
+    <section id="prompting" class="section">
+      <div class="container">
+        <h2>Prompting Best Practices</h2>
+        <p class="section-subtitle">Get better results from Claude with these techniques</p>
+
+        <div class="tips-grid">
+          <div class="tip-card">
+            <div class="tip-number">1</div>
+            <h3>Be Specific</h3>
+            <p>Instead of "fix this code", say "fix the null pointer exception in the parseUser function on line 42 that occurs when the email field is missing."</p>
+          </div>
+          <div class="tip-card">
+            <div class="tip-number">2</div>
+            <h3>Provide Context</h3>
+            <p>Share relevant code, error messages, expected behavior, and what you've already tried. The more context Claude has, the better the answer.</p>
+          </div>
+          <div class="tip-card">
+            <div class="tip-number">3</div>
+            <h3>Use Examples</h3>
+            <p>Show Claude what you want with input/output examples. "Given input X, I expect output Y" is much clearer than a long description.</p>
+          </div>
+          <div class="tip-card">
+            <div class="tip-number">4</div>
+            <h3>Break Down Complex Tasks</h3>
+            <p>Instead of asking for an entire app at once, break it into steps: design the schema, then the API, then the UI, etc.</p>
+          </div>
+          <div class="tip-card">
+            <div class="tip-number">5</div>
+            <h3>Assign a Role</h3>
+            <p>"You are a senior backend engineer reviewing this PR for security issues" helps Claude adopt the right perspective and expertise level.</p>
+          </div>
+          <div class="tip-card">
+            <div class="tip-number">6</div>
+            <h3>Iterate and Refine</h3>
+            <p>Don't expect perfection on the first try. Use follow-up messages to refine, adjust, and improve Claude's output.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Resources -->
+    <section id="resources" class="section section-alt">
+      <div class="container">
+        <h2>Resources & Links</h2>
+        <div class="resource-grid">
+          <a href="https://docs.anthropic.com" class="resource-card" target="_blank" rel="noopener">
+            <h3>Anthropic Docs</h3>
+            <p>Official API documentation, guides, and references</p>
+          </a>
+          <a href="https://docs.anthropic.com/en/docs/claude-code" class="resource-card" target="_blank" rel="noopener">
+            <h3>Claude Code Docs</h3>
+            <p>Setup, configuration, and usage guide for Claude Code</p>
+          </a>
+          <a href="https://console.anthropic.com" class="resource-card" target="_blank" rel="noopener">
+            <h3>Anthropic Console</h3>
+            <p>Manage API keys, usage, and billing</p>
+          </a>
+          <a href="https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering" class="resource-card" target="_blank" rel="noopener">
+            <h3>Prompt Engineering Guide</h3>
+            <p>Official guide to writing effective prompts</p>
+          </a>
+          <a href="https://github.com/anthropics/claude-code" class="resource-card" target="_blank" rel="noopener">
+            <h3>Claude Code GitHub</h3>
+            <p>Source code, issues, and community discussions</p>
+          </a>
+          <a href="https://docs.anthropic.com/en/docs/build-with-claude/tool-use" class="resource-card" target="_blank" rel="noopener">
+            <h3>Tool Use Guide</h3>
+            <p>Learn how to give Claude access to external tools</p>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>Built with Claude Code &mdash; A learning resource by msunal</p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
