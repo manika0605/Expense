@@ -133,10 +133,16 @@
 
   function render(){
     var settings=DB.getSettings(),expenses=DB.getExpenses();var cr=0,db2=0;expenses.forEach(function(e){if(e.type==='credit')cr+=e.amount;else if(e.type!=='transfer')db2+=e.amount;});
-    var rem=settings.budget+cr-db2,tot=settings.budget+cr;
-    document.getElementById('totalBudget').textContent=fmt(tot);document.getElementById('totalSpent').textContent=fmt(db2);
+    // If default bank is set, use its balance as the budget
+    var defBankName=settings.default_bank;
+    var defBankBal=null;
+    if(defBankName){var banks=DB.getBanks();for(var bi=0;bi<banks.length;bi++){if(banks[bi].name===defBankName){defBankBal=banks[bi].balance;break;}}}
+    var tot=defBankBal!==null?(defBankBal+cr):(settings.budget+cr);
+    var rem=defBankBal!==null?(defBankBal):(settings.budget+cr-db2);
+    document.getElementById('totalBudget').textContent=fmt(tot)+(defBankName?' ('+defBankName+')':'');document.getElementById('totalSpent').textContent=fmt(db2);
     var remEl=document.getElementById('remaining');remEl.textContent=fmt(rem);remEl.classList.toggle('negative',rem<0);
-    var pct=tot>0?Math.min((db2/tot)*100,100):0;var fill=document.getElementById('progressFill');fill.style.width=pct+'%';fill.classList.toggle('over',rem<0);
+    var budgetForPct=defBankBal!==null?(defBankBal+db2):tot;
+    var pct=budgetForPct>0?Math.min((db2/budgetForPct)*100,100):0;var fill=document.getElementById('progressFill');fill.style.width=pct+'%';fill.classList.toggle('over',rem<0);
     var user=queryOne("SELECT name FROM users WHERE id=?",[activeUserId]);document.getElementById('headerUser').textContent=user?user.name:'';
     var pillsC=document.getElementById('filterPills');pillsC.textContent='';
     var allTypes=['All','Food','Shopping','Bills','Transport','Health','Entertainment','Others','Income','Transfer'];var catCounts={All:expenses.length};
