@@ -241,7 +241,16 @@
   document.getElementById('pillIncome').addEventListener('click',function(){entryType='credit';this.classList.add('active');document.getElementById('pillExpense').classList.remove('active');updatePreview();});
   document.getElementById('previewCat').addEventListener('click',function(){document.getElementById('catOverride').classList.toggle('visible');});
   document.getElementById('expenseList').addEventListener('click',function(e){var btn=e.target.closest('.btn-delete');if(btn)deleteExpense(parseInt(btn.dataset.id,10));});
-  document.getElementById('resetBtn').addEventListener('click',function(){var lo=getLeftover();document.getElementById('confirmText').textContent=lo>0?'You have '+fmt(lo)+' remaining. It will roll over.':'No leftover. Starting fresh.';openModal('confirmModal');});
+  // Action menu (bottom sheet)
+  var actionMenu=document.getElementById('actionMenu');
+  var menuBackdrop=document.getElementById('menuBackdrop');
+  function openMenu(){actionMenu.classList.add('open');menuBackdrop.classList.add('open');}
+  function closeMenu(){actionMenu.classList.remove('open');menuBackdrop.classList.remove('open');}
+  document.getElementById('menuBtn').addEventListener('click',openMenu);
+  document.getElementById('menuCancel').addEventListener('click',closeMenu);
+  menuBackdrop.addEventListener('click',closeMenu);
+
+  document.getElementById('resetBtn').addEventListener('click',function(){closeMenu();var lo=getLeftover();document.getElementById('confirmText').textContent=lo>0?'You have '+fmt(lo)+' remaining. It will roll over.':'No leftover. Starting fresh.';openModal('confirmModal');});
   document.getElementById('confirmYes').addEventListener('click',function(){closeModal('confirmModal');document.getElementById('salaryInput').value='';var lo=getLeftover();document.getElementById('salaryText').textContent=lo>0?'Rollover: '+fmt(lo)+'. Enter new salary.':'Enter your salary or budget.';openModal('salaryModal');setTimeout(function(){document.getElementById('salaryInput').focus();},300);});
   document.getElementById('confirmNo').addEventListener('click',function(){closeModal('confirmModal');});
   document.getElementById('salaryCancel').addEventListener('click',function(){closeModal('salaryModal');});
@@ -257,7 +266,7 @@
   document.getElementById('settingsCancel').addEventListener('click',function(){closeModal('settingsModal');});
   document.getElementById('settingsSave').addEventListener('click',saveSettingsFromModal);
   document.getElementById('addBankBtn').addEventListener('click',function(){var list=document.getElementById('settingsBankList'),row=el('div','settings-bank-row');var ni=el('input','input');ni.type='text';ni.placeholder='e.g. SBI H';row.appendChild(ni);var bi=el('input','input');bi.type='number';bi.inputMode='decimal';bi.placeholder='Balance';row.appendChild(bi);var rm=el('button','btn-remove-bank');rm.textContent='✕';rm.addEventListener('click',function(){row.remove();});row.appendChild(rm);list.appendChild(row);ni.focus();});
-  document.getElementById('nukeBtn').addEventListener('click',function(){openModal('nukeModal');});
+  document.getElementById('nukeBtn').addEventListener('click',function(){closeMenu();openModal('nukeModal');});
   document.getElementById('nukeCancel').addEventListener('click',function(){closeModal('nukeModal');});
   document.getElementById('nukeConfirm').addEventListener('click',function(){DB.nukeUser();activeFilter='All';searchQuery='';document.getElementById('searchInput').value='';closeModal('nukeModal');renderBankSelect();render();});
   document.querySelectorAll('.modal-overlay').forEach(function(ov){ov.addEventListener('click',function(e){if(e.target===ov)closeModal(ov.id);});});
