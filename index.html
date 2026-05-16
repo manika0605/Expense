@@ -1,547 +1,467 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Learn Claude & Claude Code</title>
-  <link rel="stylesheet" href="styles.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Expenses">
+<meta name="theme-color" content="#111111">
+<title>Expense Tracker</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0a0a0f;--card:rgba(255,255,255,0.06);--card2:rgba(255,255,255,0.08);
+    --card-solid:#1c1c1e;--text:#f5f5f7;--sub:#7c7c82;
+    --green:#34d399;--green-dim:rgba(52,211,153,0.12);
+    --red:#f87171;--red-dim:rgba(248,113,113,0.12);
+    --accent:#818cf8;--accent-dim:rgba(129,140,248,0.15);
+    --border:rgba(255,255,255,0.08);
+    --safe-top:env(safe-area-inset-top,20px);
+    --safe-bottom:env(safe-area-inset-bottom,0px);
+    --cat-food:#fb923c;--cat-shopping:#f472b6;--cat-bills:#60a5fa;
+    --cat-transport:#a78bfa;--cat-health:#34d399;--cat-entertainment:#fbbf24;--cat-others:#94a3b8;
+  }
+  html,body{
+    height:100%;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text',system-ui,sans-serif;
+    -webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent;
+    overscroll-behavior:none;
+  }
+  body{
+    padding-top:calc(var(--safe-top) + 12px);
+    padding-bottom:calc(var(--safe-bottom) + 12px);
+    display:flex;flex-direction:column;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(129,140,248,0.12), transparent),
+      var(--bg);
+  }
+  .container{
+    width:100%;max-width:430px;margin:0 auto;padding:0 16px;
+    flex:1;display:flex;flex-direction:column;overflow:hidden;
+  }
+
+  .header{text-align:center;padding:8px 0 18px}
+  .header h1{
+    font-size:13px;font-weight:700;letter-spacing:1.5px;color:var(--sub);
+    text-transform:uppercase;
+  }
+
+  /* Budget Card — gradient glass */
+  .budget-display{
+    background:linear-gradient(135deg, rgba(129,140,248,0.13) 0%, rgba(52,211,153,0.08) 100%);
+    backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:20px;padding:22px 20px;margin-bottom:18px;
+    position:relative;overflow:hidden;
+  }
+  .budget-display::before{
+    content:'';position:absolute;top:-40%;right:-20%;width:200px;height:200px;
+    background:radial-gradient(circle,rgba(129,140,248,0.15),transparent 70%);
+    pointer-events:none;
+  }
+  .budget-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;position:relative}
+  .budget-row:last-child{margin-bottom:0}
+  .budget-label{font-size:12px;color:var(--sub);font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
+  .budget-value{font-size:17px;font-weight:600;color:rgba(255,255,255,0.85)}
+  .budget-value.remaining{
+    color:var(--green);font-size:32px;font-weight:800;
+    letter-spacing:-0.5px;
+  }
+  .budget-value.remaining.negative{color:var(--red)}
+  .budget-value.spent{color:var(--sub)}
+
+  .progress-bar{
+    height:6px;background:rgba(255,255,255,0.06);border-radius:3px;
+    margin:16px 0 6px;overflow:hidden;position:relative;
+  }
+  .progress-fill{
+    height:100%;border-radius:3px;transition:width .4s cubic-bezier(.4,0,.2,1);
+    background:linear-gradient(90deg,var(--accent),var(--green));
+  }
+  .progress-fill.over{background:linear-gradient(90deg,#f87171,#ef4444)}
+
+  /* Form */
+  .form-card{
+    background:var(--card);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+    border:1px solid var(--border);border-radius:18px;padding:14px;margin-bottom:18px;
+  }
+  .form-row{display:flex;gap:10px;margin-bottom:10px}
+  .form-row:last-child{margin-bottom:0}
+  input,select,button{
+    font-family:inherit;font-size:16px;border:none;outline:none;
+    -webkit-appearance:none;appearance:none;
+  }
+  .input{
+    flex:1;background:rgba(255,255,255,0.06);color:var(--text);border-radius:12px;
+    padding:12px 14px;min-height:44px;border:1px solid transparent;
+    transition:border-color .2s, background .2s;
+  }
+  .input::placeholder{color:var(--sub)}
+  .input:focus{border-color:var(--accent);background:rgba(129,140,248,0.06)}
+  .input-amount{flex:0 0 110px}
+  select.input{
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237c7c82' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;
+  }
+  .btn-add{
+    background:linear-gradient(135deg,#818cf8,#6366f1);color:#fff;border-radius:12px;
+    padding:12px 22px;min-height:44px;font-weight:700;cursor:pointer;
+    min-width:44px;display:flex;align-items:center;justify-content:center;
+    box-shadow:0 4px 15px rgba(99,102,241,0.3);
+    transition:transform .15s,box-shadow .15s;
+  }
+  .btn-add:active{transform:scale(0.95);box-shadow:0 2px 8px rgba(99,102,241,0.2)}
+
+  /* List */
+  .list-header{
+    font-size:12px;color:var(--sub);font-weight:700;text-transform:uppercase;
+    letter-spacing:1px;margin-bottom:10px;padding:0 4px;
+  }
+  .expense-list{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px}
+  .expense-item{
+    background:var(--card);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    border:1px solid var(--border);
+    border-radius:16px;padding:14px 14px 14px 16px;
+    margin-bottom:8px;display:flex;align-items:center;gap:12px;
+    transition:transform .15s,background .15s;
+  }
+  .expense-item:active{transform:scale(0.98);background:rgba(255,255,255,0.08)}
+  .expense-cat-icon{
+    width:40px;height:40px;border-radius:12px;
+    display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;
+  }
+  .expense-cat-icon.cat-Food{background:rgba(251,146,60,0.15)}
+  .expense-cat-icon.cat-Shopping{background:rgba(244,114,182,0.15)}
+  .expense-cat-icon.cat-Bills{background:rgba(96,165,250,0.15)}
+  .expense-cat-icon.cat-Transport{background:rgba(167,139,250,0.15)}
+  .expense-cat-icon.cat-Health{background:rgba(52,211,153,0.15)}
+  .expense-cat-icon.cat-Entertainment{background:rgba(251,191,36,0.15)}
+  .expense-cat-icon.cat-Others{background:rgba(148,163,184,0.15)}
+  .expense-info{flex:1;min-width:0}
+  .expense-desc{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .expense-cat{font-size:12px;color:var(--sub);margin-top:3px;font-weight:500}
+  .expense-amount{font-size:16px;font-weight:700;flex-shrink:0;margin-right:2px;letter-spacing:-0.3px}
+  .btn-delete{
+    width:44px;height:44px;display:flex;align-items:center;justify-content:center;
+    background:none;color:var(--sub);font-size:16px;cursor:pointer;
+    border-radius:12px;flex-shrink:0;transition:color .15s,background .15s;
+  }
+  .btn-delete:active{background:var(--red-dim);color:var(--red)}
+
+  .empty-state{text-align:center;color:var(--sub);padding:48px 20px;font-size:15px}
+  .empty-icon{font-size:44px;margin-bottom:14px;opacity:0.6}
+
+  /* Monthly Reset */
+  .monthly-section{padding:14px 0;border-top:1px solid var(--border);margin-top:8px}
+  .btn-reset{
+    width:100%;background:var(--accent-dim);color:var(--accent);border-radius:14px;
+    padding:14px;min-height:50px;font-size:15px;font-weight:700;cursor:pointer;
+    border:1px solid rgba(129,140,248,0.2);
+    transition:transform .15s,background .15s;
+  }
+  .btn-reset:active{transform:scale(0.98);background:rgba(129,140,248,0.2)}
+  .rollover-info{text-align:center;font-size:12px;color:var(--sub);margin-top:10px;font-weight:500}
+
+  /* Modals — glass sheet */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(0,0,0,0.65);
+    backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+    display:flex;align-items:flex-end;justify-content:center;
+    z-index:100;opacity:0;pointer-events:none;transition:opacity .25s;
+    padding:0 8px calc(var(--safe-bottom) + 8px);
+  }
+  .modal-overlay.active{opacity:1;pointer-events:auto}
+  .modal{
+    background:rgba(30,30,35,0.95);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:20px;width:100%;max-width:400px;
+    padding:28px 22px;transform:translateY(30px);
+    transition:transform .3s cubic-bezier(.4,0,.2,1);
+  }
+  .modal-overlay.active .modal{transform:translateY(0)}
+  .modal h2{font-size:19px;font-weight:700;text-align:center;margin-bottom:8px}
+  .modal p{font-size:14px;color:var(--sub);text-align:center;margin-bottom:22px;line-height:1.5}
+  .modal .input{width:100%;margin-bottom:18px}
+  .modal-buttons{display:flex;gap:10px}
+  .modal-buttons button{
+    flex:1;min-height:50px;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;
+    transition:transform .15s;
+  }
+  .modal-buttons button:active{transform:scale(0.97)}
+  .btn-cancel{background:rgba(255,255,255,0.08);color:var(--text)}
+  .btn-confirm{
+    background:linear-gradient(135deg,#818cf8,#6366f1);color:#fff;
+    box-shadow:0 4px 15px rgba(99,102,241,0.3);
+  }
+
+  /* Scrollbar */
+  .expense-list::-webkit-scrollbar{width:0;height:0}
+</style>
 </head>
 <body>
-  <nav id="navbar">
-    <div class="nav-container">
-      <a href="#hero" class="logo">Claude Learning</a>
-      <ul class="nav-links">
-        <li><a href="#what-is-claude">What is Claude</a></li>
-        <li><a href="#models">Models</a></li>
-        <li><a href="#claude-code">Claude Code</a></li>
-        <li><a href="#deep-dive">Deep Dive</a></li>
-        <li><a href="#api">API</a></li>
-        <li><a href="#prompting">Prompting</a></li>
-        <li><a href="#resources">Resources</a></li>
-      </ul>
-      <button class="nav-toggle" aria-label="Toggle navigation">&#9776;</button>
+
+<div class="container">
+  <div class="header"><h1>EXPENSE TRACKER</h1></div>
+
+  <div class="budget-display">
+    <div class="budget-row">
+      <span class="budget-label">Total Budget</span>
+      <span class="budget-value" id="totalBudget"></span>
     </div>
-  </nav>
-
-  <header id="hero">
-    <div class="hero-content">
-      <h1>Learn Claude & Claude Code</h1>
-      <p>Your guide to understanding and working with Anthropic's AI assistant</p>
-      <a href="#what-is-claude" class="cta-button">Get Started</a>
+    <div class="budget-row">
+      <span class="budget-label">Spent</span>
+      <span class="budget-value spent" id="totalSpent"></span>
     </div>
-  </header>
-
-  <main>
-    <!-- What is Claude -->
-    <section id="what-is-claude" class="section">
-      <div class="container">
-        <h2>What is Claude?</h2>
-        <div class="card-grid">
-          <div class="card">
-            <div class="card-icon">&#129302;</div>
-            <h3>AI Assistant</h3>
-            <p>Claude is an AI assistant built by Anthropic. It can help with writing, analysis, coding, math, reasoning, and much more. It's designed to be helpful, harmless, and honest.</p>
-          </div>
-          <div class="card">
-            <div class="card-icon">&#128274;</div>
-            <h3>Safety-First Design</h3>
-            <p>Anthropic focuses on AI safety research. Claude is built with Constitutional AI principles, making it more reliable, interpretable, and steerable than many alternatives.</p>
-          </div>
-          <div class="card">
-            <div class="card-icon">&#128640;</div>
-            <h3>Capabilities</h3>
-            <ul>
-              <li>Natural language understanding & generation</li>
-              <li>Code writing, review, and debugging</li>
-              <li>Data analysis and reasoning</li>
-              <li>Document summarization</li>
-              <li>Creative and technical writing</li>
-              <li>Multi-turn conversation with context</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Models -->
-    <section id="models" class="section section-alt">
-      <div class="container">
-        <h2>Claude Model Family</h2>
-        <p class="section-subtitle">Choose the right model for your use case</p>
-        <div class="model-table-wrapper">
-          <table class="model-table">
-            <thead>
-              <tr>
-                <th>Model</th>
-                <th>Best For</th>
-                <th>Speed</th>
-                <th>Intelligence</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><strong>Opus 4.6</strong></td>
-                <td>Complex reasoning, coding, deep analysis</td>
-                <td><span class="bar bar-2"></span></td>
-                <td><span class="bar bar-5"></span></td>
-              </tr>
-              <tr>
-                <td><strong>Sonnet 4.6</strong></td>
-                <td>Balanced performance for most tasks</td>
-                <td><span class="bar bar-4"></span></td>
-                <td><span class="bar bar-4"></span></td>
-              </tr>
-              <tr>
-                <td><strong>Haiku 4.5</strong></td>
-                <td>Fast responses, simple tasks, high volume</td>
-                <td><span class="bar bar-5"></span></td>
-                <td><span class="bar bar-3"></span></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="tip-box">
-          <strong>Tip:</strong> When building AI applications, default to the latest and most capable Claude models. Use Haiku for latency-sensitive or high-volume tasks where cost matters.
-        </div>
-      </div>
-    </section>
-
-    <!-- Claude Code -->
-    <section id="claude-code" class="section">
-      <div class="container">
-        <h2>Claude Code</h2>
-        <p class="section-subtitle">Anthropic's official agentic coding tool</p>
-
-        <div class="card-grid">
-          <div class="card">
-            <div class="card-icon">&#128187;</div>
-            <h3>What is Claude Code?</h3>
-            <p>Claude Code is an agentic coding tool that lives in your terminal and IDE. It understands your entire codebase, can execute commands, edit files, and help you build software end-to-end.</p>
-          </div>
-          <div class="card">
-            <div class="card-icon">&#9997;&#65039;</div>
-            <h3>Available Everywhere</h3>
-            <ul>
-              <li>CLI in the terminal</li>
-              <li>Desktop app (Mac/Windows)</li>
-              <li>Web app (claude.ai/code)</li>
-              <li>VS Code extension</li>
-              <li>JetBrains extension</li>
-            </ul>
-          </div>
-          <div class="card">
-            <div class="card-icon">&#128736;</div>
-            <h3>Key Features</h3>
-            <ul>
-              <li>Read, search, and edit files</li>
-              <li>Run terminal commands</li>
-              <li>Git operations (commits, PRs)</li>
-              <li>Multi-file refactoring</li>
-              <li>Test writing and debugging</li>
-              <li>Codebase exploration</li>
-            </ul>
-          </div>
-        </div>
-
-        <h3 class="subsection-title">Essential Slash Commands</h3>
-        <div class="commands-grid">
-          <div class="command-item">
-            <code>/help</code>
-            <span>Get help with Claude Code</span>
-          </div>
-          <div class="command-item">
-            <code>/commit</code>
-            <span>Create a git commit with a generated message</span>
-          </div>
-          <div class="command-item">
-            <code>/review-pr</code>
-            <span>Review a pull request</span>
-          </div>
-          <div class="command-item">
-            <code>/fast</code>
-            <span>Toggle fast mode (same model, faster output)</span>
-          </div>
-          <div class="command-item">
-            <code>/clear</code>
-            <span>Clear conversation context</span>
-          </div>
-          <div class="command-item">
-            <code>/help</code>
-            <span>Show available commands and usage info</span>
-          </div>
-        </div>
-
-        <h3 class="subsection-title">CLAUDE.md - Project Instructions</h3>
-        <div class="code-block">
-          <div class="code-header">CLAUDE.md</div>
-          <pre><code># My Project
-
-## Build & Test
-- Build: `npm run build`
-- Test: `npm test`
-- Lint: `npm run lint`
-
-## Code Style
-- Use TypeScript strict mode
-- Prefer functional components
-- Write tests for all new features</code></pre>
-        </div>
-        <p class="note">Place a <code>CLAUDE.md</code> file in your project root to give Claude Code persistent instructions about your project's conventions, build commands, and preferences.</p>
-      </div>
-    </section>
-
-    <!-- Deep Dive: .claude, CLAUDE.md, Skills, Agents -->
-    <section id="deep-dive" class="section section-alt">
-      <div class="container">
-        <h2>Claude Code Deep Dive</h2>
-        <p class="section-subtitle">Understand the core concepts that power your Claude Code workflow</p>
-
-        <!-- .claude Directory -->
-        <div class="deep-dive-block">
-          <div class="deep-dive-header">
-            <span class="deep-dive-icon">&#128193;</span>
-            <h3>.claude Directory</h3>
-          </div>
-          <p>The <code>.claude/</code> directory is Claude Code's configuration home. It lives at <code>~/.claude/</code> globally and can also exist per-project. It stores your settings, memory, and customizations.</p>
-          <div class="file-tree">
-            <div class="file-tree-title">~/.claude/</div>
-            <ul>
-              <li><span class="tree-file">settings.json</span> &mdash; Global settings, permissions, and hook definitions</li>
-              <li><span class="tree-folder">projects/</span> &mdash; Per-project memory and configuration
-                <ul>
-                  <li><span class="tree-folder">&lt;project-path&gt;/</span>
-                    <ul>
-                      <li><span class="tree-file">CLAUDE.md</span> &mdash; User-level project instructions (not committed to git)</li>
-                      <li><span class="tree-folder">memory/</span> &mdash; Persistent memory files Claude saves across sessions</li>
-                    </ul>
-                  </li>
-                </ul>
-              </li>
-              <li><span class="tree-file">keybindings.json</span> &mdash; Custom keyboard shortcuts</li>
-            </ul>
-          </div>
-          <div class="tip-box">
-            <strong>Key point:</strong> The global <code>~/.claude/</code> directory stores your personal preferences, while project-level <code>.claude/</code> directories keep project-specific context. Settings in <code>settings.json</code> control permissions, hooks, and automated behaviors.
-          </div>
-        </div>
-
-        <!-- CLAUDE.md -->
-        <div class="deep-dive-block">
-          <div class="deep-dive-header">
-            <span class="deep-dive-icon">&#128221;</span>
-            <h3>CLAUDE.md Files</h3>
-          </div>
-          <p>CLAUDE.md is your way of giving Claude Code persistent instructions. Think of it as a README that Claude reads every time it starts a conversation in your project.</p>
-
-          <div class="claude-md-levels">
-            <div class="level-card">
-              <h4>Project Root</h4>
-              <code>./CLAUDE.md</code>
-              <p>Checked into git. Shared with your team. Contains build commands, code style rules, and project conventions.</p>
-            </div>
-            <div class="level-card">
-              <h4>User-level (per project)</h4>
-              <code>~/.claude/projects/.../CLAUDE.md</code>
-              <p>Personal and not committed. Your own preferences, shortcuts, or overrides for this project.</p>
-            </div>
-            <div class="level-card">
-              <h4>Subdirectory</h4>
-              <code>./src/CLAUDE.md</code>
-              <p>Scoped instructions for a subdirectory. Claude loads these when working in that folder.</p>
-            </div>
-          </div>
-
-          <h4 class="example-title">What to put in CLAUDE.md</h4>
-          <div class="code-block">
-            <div class="code-header">CLAUDE.md</div>
-            <pre><code># My Project
-
-## Build & Test Commands
-- Build: `npm run build`
-- Test single file: `npm test -- path/to/file.test.ts`
-- Lint: `npm run lint -- --fix`
-
-## Code Conventions
-- Use TypeScript strict mode everywhere
-- Prefer functional React components with hooks
-- Name files in kebab-case (e.g., user-profile.tsx)
-- All API responses must use the Result&lt;T&gt; type
-
-## Architecture Notes
-- /src/api/ — REST handlers (Express)
-- /src/services/ — Business logic layer
-- /src/db/ — Prisma models and migrations
-
-## Things to Avoid
-- Never use `any` type
-- Don't add console.log in production code
-- Don't modify generated files in /src/generated/</code></pre>
-          </div>
-        </div>
-
-        <!-- Skills -->
-        <div class="deep-dive-block">
-          <div class="deep-dive-header">
-            <span class="deep-dive-icon">&#9889;</span>
-            <h3>Skills (Slash Commands)</h3>
-          </div>
-          <p>Skills are reusable prompt templates that you invoke with slash commands. They encapsulate complex workflows into simple one-liners, turning multi-step tasks into a single command.</p>
-
-          <div class="skill-grid">
-            <div class="skill-card">
-              <div class="skill-name"><code>/commit</code></div>
-              <div class="skill-desc">Analyzes your staged changes and creates a well-formatted git commit with an auto-generated message.</div>
-              <div class="skill-tag">Built-in</div>
-            </div>
-            <div class="skill-card">
-              <div class="skill-name"><code>/review-pr</code></div>
-              <div class="skill-desc">Reviews a pull request for bugs, security issues, code quality, and provides actionable feedback.</div>
-              <div class="skill-tag">Built-in</div>
-            </div>
-            <div class="skill-card">
-              <div class="skill-name"><code>/fast</code></div>
-              <div class="skill-desc">Toggles fast mode — same Opus model but with faster output. Great for quick tasks.</div>
-              <div class="skill-tag">Built-in</div>
-            </div>
-            <div class="skill-card">
-              <div class="skill-name"><code>/simplify</code></div>
-              <div class="skill-desc">Reviews changed code for reuse, quality, and efficiency, then fixes any issues found.</div>
-              <div class="skill-tag">Custom</div>
-            </div>
-          </div>
-
-          <h4 class="example-title">How Skills Work</h4>
-          <div class="how-it-works">
-            <div class="step">
-              <div class="step-num">1</div>
-              <div class="step-text">You type a slash command like <code>/commit</code></div>
-            </div>
-            <div class="step">
-              <div class="step-num">2</div>
-              <div class="step-text">Claude Code expands it into a full detailed prompt behind the scenes</div>
-            </div>
-            <div class="step">
-              <div class="step-num">3</div>
-              <div class="step-text">Claude executes the task using the expanded instructions, tools, and context</div>
-            </div>
-          </div>
-
-          <div class="tip-box">
-            <strong>Tip:</strong> You can create custom skills for your team's workflows — deploy scripts, test runners, code review checklists, and more. Skills are defined as prompt templates and registered in your configuration.
-          </div>
-        </div>
-
-        <!-- Agents -->
-        <div class="deep-dive-block">
-          <div class="deep-dive-header">
-            <span class="deep-dive-icon">&#129302;</span>
-            <h3>Agents (Sub-agents)</h3>
-          </div>
-          <p>Agents are specialized Claude instances that can be spawned to handle specific tasks in parallel. They run independently with their own context and tools, then report back results.</p>
-
-          <div class="agent-grid">
-            <div class="agent-card">
-              <h4>Explore Agent</h4>
-              <p>Fast codebase exploration — find files by patterns, search for keywords, answer structural questions about the code.</p>
-              <div class="agent-use-case">Use for: "How do API endpoints work in this project?"</div>
-            </div>
-            <div class="agent-card">
-              <h4>Plan Agent</h4>
-              <p>Software architect agent that designs implementation strategies, identifies critical files, and considers trade-offs.</p>
-              <div class="agent-use-case">Use for: "Plan how to add authentication to this app"</div>
-            </div>
-            <div class="agent-card">
-              <h4>Code Review Agent</h4>
-              <p>Thorough code reviewer that catches bugs, security issues, and over-engineering. Uses deeper analysis.</p>
-              <div class="agent-use-case">Use for: "Review my changes before I push"</div>
-            </div>
-            <div class="agent-card">
-              <h4>General Purpose Agent</h4>
-              <p>Handles complex, multi-step tasks. Can search code, read files, run commands — a full-powered Claude in a sandbox.</p>
-              <div class="agent-use-case">Use for: "Research how error handling works across the codebase"</div>
-            </div>
-          </div>
-
-          <h4 class="example-title">Why Agents?</h4>
-          <div class="agent-benefits">
-            <div class="benefit">
-              <strong>Parallelism</strong>
-              <p>Multiple agents can run at the same time, speeding up research and multi-part tasks.</p>
-            </div>
-            <div class="benefit">
-              <strong>Isolation</strong>
-              <p>Each agent has its own context window, keeping the main conversation clean and focused.</p>
-            </div>
-            <div class="benefit">
-              <strong>Specialization</strong>
-              <p>Different agent types have different tools and strengths — the right agent for the right job.</p>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- API Section -->
-    <section id="api" class="section">
-      <div class="container">
-        <h2>Claude API Basics</h2>
-        <p class="section-subtitle">Build AI-powered applications with the Anthropic API</p>
-
-        <div class="card-grid two-col">
-          <div class="card">
-            <h3>Python SDK</h3>
-            <div class="code-block">
-              <div class="code-header">Python</div>
-              <pre><code>import anthropic
-
-client = anthropic.Anthropic()
-
-message = client.messages.create(
-    model="claude-sonnet-4-6-20250415",
-    max_tokens=1024,
-    messages=[
-        {"role": "user",
-         "content": "Hello, Claude!"}
-    ]
-)
-
-print(message.content[0].text)</code></pre>
-            </div>
-          </div>
-          <div class="card">
-            <h3>TypeScript SDK</h3>
-            <div class="code-block">
-              <div class="code-header">TypeScript</div>
-              <pre><code>import Anthropic from "@anthropic-ai/sdk";
-
-const client = new Anthropic();
-
-const message = await client.messages.create({
-  model: "claude-sonnet-4-6-20250415",
-  max_tokens: 1024,
-  messages: [
-    { role: "user",
-      content: "Hello, Claude!" }
-  ],
-});
-
-console.log(message.content[0].text);</code></pre>
-            </div>
-          </div>
-        </div>
-
-        <h3 class="subsection-title">Key API Concepts</h3>
-        <div class="concept-list">
-          <details class="concept">
-            <summary>Messages API</summary>
-            <p>The primary way to interact with Claude. Send a list of messages (user/assistant turns) and receive a response. Supports streaming for real-time output.</p>
-          </details>
-          <details class="concept">
-            <summary>System Prompts</summary>
-            <p>Set the behavior, personality, and constraints for Claude using a system prompt. This guides how Claude responds across the entire conversation.</p>
-          </details>
-          <details class="concept">
-            <summary>Tool Use (Function Calling)</summary>
-            <p>Define tools that Claude can call to interact with external systems - APIs, databases, calculators, etc. Claude decides when to use them and structures the arguments.</p>
-          </details>
-          <details class="concept">
-            <summary>Vision (Multimodal)</summary>
-            <p>Claude can analyze images passed in messages. Useful for understanding screenshots, diagrams, charts, documents, and more.</p>
-          </details>
-          <details class="concept">
-            <summary>Prompt Caching</summary>
-            <p>Cache frequently used prompt prefixes (like system prompts or large context) to reduce latency and cost on subsequent requests.</p>
-          </details>
-          <details class="concept">
-            <summary>Extended Thinking</summary>
-            <p>Enable Claude to think step-by-step before responding, improving performance on complex reasoning, math, and coding tasks.</p>
-          </details>
-        </div>
-      </div>
-    </section>
-
-    <!-- Prompting Tips -->
-    <section id="prompting" class="section">
-      <div class="container">
-        <h2>Prompting Best Practices</h2>
-        <p class="section-subtitle">Get better results from Claude with these techniques</p>
-
-        <div class="tips-grid">
-          <div class="tip-card">
-            <div class="tip-number">1</div>
-            <h3>Be Specific</h3>
-            <p>Instead of "fix this code", say "fix the null pointer exception in the parseUser function on line 42 that occurs when the email field is missing."</p>
-          </div>
-          <div class="tip-card">
-            <div class="tip-number">2</div>
-            <h3>Provide Context</h3>
-            <p>Share relevant code, error messages, expected behavior, and what you've already tried. The more context Claude has, the better the answer.</p>
-          </div>
-          <div class="tip-card">
-            <div class="tip-number">3</div>
-            <h3>Use Examples</h3>
-            <p>Show Claude what you want with input/output examples. "Given input X, I expect output Y" is much clearer than a long description.</p>
-          </div>
-          <div class="tip-card">
-            <div class="tip-number">4</div>
-            <h3>Break Down Complex Tasks</h3>
-            <p>Instead of asking for an entire app at once, break it into steps: design the schema, then the API, then the UI, etc.</p>
-          </div>
-          <div class="tip-card">
-            <div class="tip-number">5</div>
-            <h3>Assign a Role</h3>
-            <p>"You are a senior backend engineer reviewing this PR for security issues" helps Claude adopt the right perspective and expertise level.</p>
-          </div>
-          <div class="tip-card">
-            <div class="tip-number">6</div>
-            <h3>Iterate and Refine</h3>
-            <p>Don't expect perfection on the first try. Use follow-up messages to refine, adjust, and improve Claude's output.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Resources -->
-    <section id="resources" class="section section-alt">
-      <div class="container">
-        <h2>Resources & Links</h2>
-        <div class="resource-grid">
-          <a href="https://docs.anthropic.com" class="resource-card" target="_blank" rel="noopener">
-            <h3>Anthropic Docs</h3>
-            <p>Official API documentation, guides, and references</p>
-          </a>
-          <a href="https://docs.anthropic.com/en/docs/claude-code" class="resource-card" target="_blank" rel="noopener">
-            <h3>Claude Code Docs</h3>
-            <p>Setup, configuration, and usage guide for Claude Code</p>
-          </a>
-          <a href="https://console.anthropic.com" class="resource-card" target="_blank" rel="noopener">
-            <h3>Anthropic Console</h3>
-            <p>Manage API keys, usage, and billing</p>
-          </a>
-          <a href="https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering" class="resource-card" target="_blank" rel="noopener">
-            <h3>Prompt Engineering Guide</h3>
-            <p>Official guide to writing effective prompts</p>
-          </a>
-          <a href="https://github.com/anthropics/claude-code" class="resource-card" target="_blank" rel="noopener">
-            <h3>Claude Code GitHub</h3>
-            <p>Source code, issues, and community discussions</p>
-          </a>
-          <a href="https://docs.anthropic.com/en/docs/build-with-claude/tool-use" class="resource-card" target="_blank" rel="noopener">
-            <h3>Tool Use Guide</h3>
-            <p>Learn how to give Claude access to external tools</p>
-          </a>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <footer>
-    <div class="container">
-      <p>Built with Claude Code &mdash; A learning resource by msunal</p>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="budget-row" style="margin-top:10px">
+      <span class="budget-label">Remaining</span>
+      <span class="budget-value remaining" id="remaining"></span>
     </div>
-  </footer>
+  </div>
 
-  <script src="script.js"></script>
+  <div class="form-card">
+    <div class="form-row">
+      <input type="number" inputmode="decimal" class="input input-amount" id="amountInput" placeholder="₹ Amount">
+      <input type="text" class="input" id="descInput" placeholder="Description">
+    </div>
+    <div class="form-row">
+      <select class="input" id="catSelect">
+        <option value="Food">🍔 Food</option>
+        <option value="Shopping">🛍️ Shopping</option>
+        <option value="Bills">📄 Bills</option>
+        <option value="Transport">🚗 Transport</option>
+        <option value="Health">💊 Health</option>
+        <option value="Entertainment">🎬 Entertainment</option>
+        <option value="Others">📦 Others</option>
+      </select>
+      <button class="btn-add" id="addBtn">Add</button>
+    </div>
+  </div>
+
+  <div class="list-header">This Month's Expenses</div>
+  <div class="expense-list" id="expenseList"></div>
+
+  <div class="monthly-section">
+    <button class="btn-reset" id="resetBtn">↻ Reset Month &amp; Add Salary</button>
+    <div class="rollover-info" id="rolloverInfo"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal">
+    <h2>Start a New Month?</h2>
+    <p id="confirmText"></p>
+    <div class="modal-buttons">
+      <button class="btn-cancel" id="confirmNo">Cancel</button>
+      <button class="btn-confirm" id="confirmYes">Continue</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="salaryModal">
+  <div class="modal">
+    <h2>New Monthly Budget</h2>
+    <p id="salaryText"></p>
+    <input type="number" inputmode="decimal" class="input" id="salaryInput" placeholder="₹ Amount">
+    <div class="modal-buttons">
+      <button class="btn-cancel" id="salaryCancel">Cancel</button>
+      <button class="btn-confirm" id="salaryConfirm">Start Month</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  var ICONS = {Food:'🍔',Shopping:'🛍️',Bills:'📄',Transport:'🚗',Health:'💊',Entertainment:'🎬',Others:'📦'};
+  var KEY = 'expenseTracker_v2';
+
+  function load() {
+    try {
+      var d = localStorage.getItem(KEY);
+      return d ? JSON.parse(d) : { budget: 0, expenses: [], rollover: 0 };
+    } catch (e) {
+      return { budget: 0, expenses: [], rollover: 0 };
+    }
+  }
+
+  function save(data) {
+    localStorage.setItem(KEY, JSON.stringify(data));
+  }
+
+  function fmt(n) {
+    return '₹' + Number(n).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  }
+
+  function el(tag, className) {
+    var node = document.createElement(tag);
+    if (className) node.className = className;
+    return node;
+  }
+
+  function createExpenseItem(expense, idx) {
+    var item = el('div', 'expense-item');
+
+    var icon = el('div', 'expense-cat-icon cat-' + expense.category);
+    icon.textContent = ICONS[expense.category] || '📦';
+    item.appendChild(icon);
+
+    var info = el('div', 'expense-info');
+    var desc = el('div', 'expense-desc');
+    desc.textContent = expense.desc;
+    info.appendChild(desc);
+    var cat = el('div', 'expense-cat');
+    cat.textContent = expense.category;
+    info.appendChild(cat);
+    item.appendChild(info);
+
+    var amount = el('div', 'expense-amount');
+    amount.textContent = fmt(expense.amount);
+    item.appendChild(amount);
+
+    var delBtn = el('button', 'btn-delete');
+    delBtn.textContent = '✕';
+    delBtn.setAttribute('aria-label', 'Delete');
+    delBtn.dataset.idx = idx;
+    item.appendChild(delBtn);
+
+    return item;
+  }
+
+  function render() {
+    var data = load();
+    var spent = data.expenses.reduce(function(s, e) { return s + e.amount; }, 0);
+    var remaining = data.budget - spent;
+
+    document.getElementById('totalBudget').textContent = fmt(data.budget);
+    document.getElementById('totalSpent').textContent = fmt(spent);
+
+    var remEl = document.getElementById('remaining');
+    remEl.textContent = fmt(remaining);
+    remEl.classList.toggle('negative', remaining < 0);
+
+    var pct = data.budget > 0 ? Math.min((spent / data.budget) * 100, 100) : 0;
+    var fill = document.getElementById('progressFill');
+    fill.style.width = pct + '%';
+    fill.classList.toggle('over', remaining < 0);
+
+    var list = document.getElementById('expenseList');
+    list.textContent = '';
+
+    if (data.expenses.length === 0) {
+      var empty = el('div', 'empty-state');
+      var emIcon = el('div', 'empty-icon');
+      emIcon.textContent = '📝';
+      empty.appendChild(emIcon);
+      var emText = document.createTextNode('No expenses yet this month');
+      empty.appendChild(emText);
+      list.appendChild(empty);
+    } else {
+      var reversed = data.expenses.slice().reverse();
+      for (var i = 0; i < reversed.length; i++) {
+        var originalIdx = data.expenses.length - 1 - i;
+        list.appendChild(createExpenseItem(reversed[i], originalIdx));
+      }
+    }
+
+    var info = document.getElementById('rolloverInfo');
+    info.textContent = data.rollover > 0 ? 'Includes ' + fmt(data.rollover) + ' rolled over from last month' : '';
+  }
+
+  function addExpense() {
+    var amtEl = document.getElementById('amountInput');
+    var descEl = document.getElementById('descInput');
+    var amt = parseFloat(amtEl.value);
+    var desc = descEl.value.trim();
+    var cat = document.getElementById('catSelect').value;
+    if (!amt || amt <= 0) return;
+
+    var data = load();
+    data.expenses.push({ amount: amt, desc: desc || cat, category: cat, date: Date.now() });
+    save(data);
+    amtEl.value = '';
+    descEl.value = '';
+    amtEl.focus();
+    render();
+  }
+
+  function deleteExpense(idx) {
+    var data = load();
+    if (idx >= 0 && idx < data.expenses.length) {
+      data.expenses.splice(idx, 1);
+      save(data);
+      render();
+    }
+  }
+
+  function getLeftover() {
+    var data = load();
+    var spent = data.expenses.reduce(function(s, e) { return s + e.amount; }, 0);
+    return Math.max(data.budget - spent, 0);
+  }
+
+  function openModal(id) { document.getElementById(id).classList.add('active'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+  document.getElementById('addBtn').addEventListener('click', addExpense);
+
+  document.getElementById('expenseList').addEventListener('click', function(e) {
+    var btn = e.target.closest('.btn-delete');
+    if (btn) deleteExpense(parseInt(btn.dataset.idx, 10));
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', function() {
+    var leftover = getLeftover();
+    document.getElementById('confirmText').textContent = leftover > 0
+      ? 'You have ' + fmt(leftover) + ' remaining. It will roll over to next month.'
+      : 'No leftover balance to roll over. Starting fresh.';
+    openModal('confirmModal');
+  });
+
+  document.getElementById('confirmYes').addEventListener('click', function() {
+    closeModal('confirmModal');
+    document.getElementById('salaryInput').value = '';
+    var leftover = getLeftover();
+    document.getElementById('salaryText').textContent = leftover > 0
+      ? 'Rollover: ' + fmt(leftover) + '. Enter new salary to add on top.'
+      : 'Enter your salary or budget for this month.';
+    openModal('salaryModal');
+    setTimeout(function() { document.getElementById('salaryInput').focus(); }, 300);
+  });
+
+  document.getElementById('confirmNo').addEventListener('click', function() { closeModal('confirmModal'); });
+  document.getElementById('salaryCancel').addEventListener('click', function() { closeModal('salaryModal'); });
+
+  document.getElementById('salaryConfirm').addEventListener('click', function() {
+    var salary = parseFloat(document.getElementById('salaryInput').value);
+    if (!salary || salary <= 0) return;
+    var leftover = getLeftover();
+    var data = { budget: salary + leftover, expenses: [], rollover: leftover };
+    save(data);
+    closeModal('salaryModal');
+    render();
+  });
+
+  document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
+    overlay.addEventListener('click', function(e) {
+      if (e.target === overlay) closeModal(overlay.id);
+    });
+  });
+
+  document.getElementById('amountInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') document.getElementById('descInput').focus();
+  });
+  document.getElementById('descInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') addExpense();
+  });
+  document.getElementById('salaryInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') document.getElementById('salaryConfirm').click();
+  });
+
+  render();
+})();
+</script>
 </body>
 </html>
