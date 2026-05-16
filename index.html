@@ -8,6 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Expenses">
 <meta name="theme-color" content="#0a0a0f">
 <title>Expense Tracker</title>
+<script src="https://sql.js.org/dist/sql-wasm.js"></script>
 <style>
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   :root{
@@ -26,22 +27,25 @@
   html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',system-ui,sans-serif;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
   body{padding-top:calc(var(--safe-top) + 12px);padding-bottom:calc(var(--safe-bottom) + 12px);display:flex;flex-direction:column;background:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(129,140,248,0.12),transparent),var(--bg)}
   .container{width:100%;max-width:430px;margin:0 auto;padding:0 16px;flex:1;display:flex;flex-direction:column;overflow:hidden}
-
-  /* Header */
+  .hidden{display:none !important}
+  .loading-screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);z-index:200;gap:16px}
+  .loading-spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .loading-text{font-size:14px;color:var(--sub);font-weight:500}
   .header{display:flex;justify-content:space-between;align-items:center;padding:8px 0 18px}
+  .header-left{display:flex;align-items:center;gap:10px}
   .header h1{font-size:13px;font-weight:700;letter-spacing:1.5px;color:var(--sub);text-transform:uppercase}
-  .btn-settings{background:none;color:var(--sub);font-size:20px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:10px;cursor:pointer}
-  .btn-settings:active{background:var(--card2)}
-
-  /* Bank Balances Strip */
+  .header-user{font-size:12px;font-weight:600;color:var(--accent);background:var(--accent-dim);padding:3px 8px;border-radius:6px;cursor:pointer}
+  .header-user:active{opacity:0.7}
+  .header-right{display:flex;gap:4px}
+  .btn-icon{background:none;color:var(--sub);font-size:20px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:10px;cursor:pointer}
+  .btn-icon:active{background:var(--card2)}
   .bank-strip{display:flex;gap:8px;overflow-x:auto;padding:0 0 12px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
   .bank-strip::-webkit-scrollbar{display:none}
   .bank-chip{flex-shrink:0;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:8px 12px;min-width:80px;text-align:center}
   .bank-chip-name{font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:0.5px}
   .bank-chip-bal{font-size:14px;font-weight:700;margin-top:2px}
   .bank-chip-bal.negative{color:var(--red)}
-
-  /* Budget Card */
   .budget-display{background:linear-gradient(135deg,rgba(129,140,248,0.13),rgba(52,211,153,0.08));backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:22px 20px;margin-bottom:14px;position:relative;overflow:hidden}
   .budget-display::before{content:'';position:absolute;top:-40%;right:-20%;width:200px;height:200px;background:radial-gradient(circle,rgba(129,140,248,0.15),transparent 70%);pointer-events:none}
   .budget-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;position:relative}
@@ -54,999 +58,93 @@
   .progress-bar{height:6px;background:rgba(255,255,255,0.06);border-radius:3px;margin:16px 0 6px;overflow:hidden}
   .progress-fill{height:100%;border-radius:3px;transition:width .4s cubic-bezier(.4,0,.2,1);background:linear-gradient(90deg,var(--accent),var(--green))}
   .progress-fill.over{background:linear-gradient(90deg,#f87171,#ef4444)}
-
-  /* Insights */
   .insights-section{margin-bottom:14px}
   .insight-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--sub);font-weight:500;line-height:1.4}
-  .insight-icon{font-size:20px;flex-shrink:0}
-  .insight-text{flex:1}
-  .insight-card.alert{border-color:rgba(248,113,113,0.25);background:rgba(248,113,113,0.06)}
-  .insight-card.alert .insight-text{color:var(--red)}
-  .insight-card.good{border-color:rgba(52,211,153,0.2);background:rgba(52,211,153,0.05)}
-  .insight-card.good .insight-text{color:var(--green)}
+  .insight-icon{font-size:20px;flex-shrink:0}.insight-text{flex:1}
+  .insight-card.alert{border-color:rgba(248,113,113,0.25);background:rgba(248,113,113,0.06)}.insight-card.alert .insight-text{color:var(--red)}
+  .insight-card.good{border-color:rgba(52,211,153,0.2);background:rgba(52,211,153,0.05)}.insight-card.good .insight-text{color:var(--green)}
   .insight-dismiss{background:none;color:var(--sub);font-size:14px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:8px;flex-shrink:0}
-  .insight-dismiss:active{background:rgba(255,255,255,0.08)}
-
-  /* Smart Input Form */
   .form-card{background:var(--card);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:18px;padding:14px;margin-bottom:14px}
   .smart-row{display:flex;gap:10px}
   input,select,button{font-family:inherit;font-size:16px;border:none;outline:none;-webkit-appearance:none;appearance:none}
   .input{flex:1;background:rgba(255,255,255,0.06);color:var(--text);border-radius:12px;padding:12px 14px;min-height:44px;border:1px solid transparent;transition:border-color .2s,background .2s}
-  .input::placeholder{color:var(--sub)}
-  .input:focus{border-color:var(--accent);background:rgba(129,140,248,0.06)}
+  .input::placeholder{color:var(--sub)}.input:focus{border-color:var(--accent);background:rgba(129,140,248,0.06)}
   select.input{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237c7c82' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
-  .btn-add{background:linear-gradient(135deg,#818cf8,#6366f1);color:#fff;border-radius:12px;padding:12px 22px;min-height:44px;font-weight:700;cursor:pointer;min-width:44px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 15px rgba(99,102,241,0.3);transition:transform .15s}
-  .btn-add:active{transform:scale(0.95)}
-
-  /* Type Pills + Bank + Transfer row */
+  .btn-add{background:linear-gradient(135deg,#818cf8,#6366f1);color:#fff;border-radius:12px;padding:12px 22px;min-height:44px;font-weight:700;cursor:pointer;min-width:44px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 15px rgba(99,102,241,0.3);transition:transform .15s}.btn-add:active{transform:scale(0.95)}
   .form-controls{display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap}
   .type-pills{display:flex;border-radius:10px;overflow:hidden;border:1px solid var(--border);flex-shrink:0}
   .type-pill{padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;transition:background .15s,color .15s;min-height:34px;display:flex;align-items:center}
-  .type-pill.expense{color:var(--sub);background:transparent}
-  .type-pill.expense.active{color:var(--red);background:var(--red-dim)}
-  .type-pill.income{color:var(--sub);background:transparent}
-  .type-pill.income.active{color:var(--green);background:var(--green-dim)}
+  .type-pill.expense{color:var(--sub);background:transparent}.type-pill.expense.active{color:var(--red);background:var(--red-dim)}
+  .type-pill.income{color:var(--sub);background:transparent}.type-pill.income.active{color:var(--green);background:var(--green-dim)}
   .bank-select{flex:1;min-width:0}
-  .bank-select select.input{min-height:34px;padding:6px 32px 6px 10px;font-size:13px;font-weight:600;border-radius:10px}
-  .btn-transfer{background:var(--orange-dim);color:var(--orange);border-radius:10px;padding:6px 12px;font-size:13px;font-weight:700;cursor:pointer;min-height:34px;display:flex;align-items:center;gap:4px;flex-shrink:0}
-  .btn-transfer:active{opacity:0.7}
-
-  /* Parse Preview */
-  .parse-preview{display:none;padding:10px 4px 2px;gap:8px;align-items:center;flex-wrap:wrap}
-  .parse-preview.visible{display:flex}
+  .btn-transfer{background:var(--orange-dim);color:var(--orange);border-radius:10px;padding:6px 12px;font-size:13px;font-weight:700;cursor:pointer;min-height:34px;display:flex;align-items:center;gap:4px;flex-shrink:0}.btn-transfer:active{opacity:0.7}
+  .parse-preview{display:none;padding:10px 4px 2px;gap:8px;align-items:center;flex-wrap:wrap}.parse-preview.visible{display:flex}
   .parse-chip{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:600;padding:5px 10px;border-radius:8px}
-  .parse-chip.amount{background:var(--green-dim);color:var(--green)}
-  .parse-chip.desc{background:rgba(255,255,255,0.08);color:var(--text)}
+  .parse-chip.amount{background:var(--green-dim);color:var(--green)}.parse-chip.desc{background:rgba(255,255,255,0.08);color:var(--text)}
   .parse-chip.bank-tag{background:var(--accent-dim);color:var(--accent);font-size:11px}
-  .parse-chip.category{cursor:pointer;transition:transform .15s}
-  .parse-chip.category:active{transform:scale(0.95)}
+  .parse-chip.category{cursor:pointer;transition:transform .15s}.parse-chip.category:active{transform:scale(0.95)}
   .parse-chip .ai-badge{font-size:9px;font-weight:800;background:var(--accent-dim);color:var(--accent);padding:1px 4px;border-radius:4px;letter-spacing:0.5px}
-  .cat-override{display:none;margin-top:8px}
-  .cat-override.visible{display:flex;gap:10px}
-  .parse-chip.cat-Food{background:rgba(251,146,60,0.15);color:var(--cat-food)}
-  .parse-chip.cat-Shopping{background:rgba(244,114,182,0.15);color:var(--cat-shopping)}
-  .parse-chip.cat-Bills{background:rgba(96,165,250,0.15);color:var(--cat-bills)}
-  .parse-chip.cat-Transport{background:rgba(167,139,250,0.15);color:var(--cat-transport)}
-  .parse-chip.cat-Health{background:rgba(52,211,153,0.15);color:var(--cat-health)}
-  .parse-chip.cat-Entertainment{background:rgba(251,191,36,0.15);color:var(--cat-entertainment)}
-  .parse-chip.cat-Others{background:rgba(148,163,184,0.15);color:var(--cat-others)}
-
-  /* Filter & Search */
-  .filter-section{margin-bottom:10px}
-  .search-row{display:flex;gap:8px;margin-bottom:8px}
-  .search-input{flex:1;background:rgba(255,255,255,0.06);color:var(--text);border-radius:10px;padding:8px 12px;min-height:36px;font-size:14px;border:1px solid transparent;transition:border-color .2s}
-  .search-input::placeholder{color:var(--sub)}
-  .search-input:focus{border-color:var(--accent)}
-  .filter-pills{display:flex;gap:6px;overflow-x:auto;padding:2px 0;-webkit-overflow-scrolling:touch;scrollbar-width:none}
-  .filter-pills::-webkit-scrollbar{display:none}
-  .filter-pill{flex-shrink:0;padding:5px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;background:rgba(255,255,255,0.06);color:var(--sub);border:1px solid transparent;transition:all .15s}
-  .filter-pill.active{color:var(--accent);background:var(--accent-dim);border-color:rgba(129,140,248,0.3)}
-  .filter-pill:active{transform:scale(0.95)}
+  .cat-override{display:none;margin-top:8px}.cat-override.visible{display:flex;gap:10px}
+  .parse-chip.cat-Food{background:rgba(251,146,60,0.15);color:var(--cat-food)}.parse-chip.cat-Shopping{background:rgba(244,114,182,0.15);color:var(--cat-shopping)}.parse-chip.cat-Bills{background:rgba(96,165,250,0.15);color:var(--cat-bills)}.parse-chip.cat-Transport{background:rgba(167,139,250,0.15);color:var(--cat-transport)}.parse-chip.cat-Health{background:rgba(52,211,153,0.15);color:var(--cat-health)}.parse-chip.cat-Entertainment{background:rgba(251,191,36,0.15);color:var(--cat-entertainment)}.parse-chip.cat-Others{background:rgba(148,163,184,0.15);color:var(--cat-others)}
+  .filter-section{margin-bottom:10px}.search-row{display:flex;gap:8px;margin-bottom:8px}
+  .search-input{flex:1;background:rgba(255,255,255,0.06);color:var(--text);border-radius:10px;padding:8px 12px;min-height:36px;font-size:14px;border:1px solid transparent;transition:border-color .2s}.search-input::placeholder{color:var(--sub)}.search-input:focus{border-color:var(--accent)}
+  .filter-pills{display:flex;gap:6px;overflow-x:auto;padding:2px 0;-webkit-overflow-scrolling:touch;scrollbar-width:none}.filter-pills::-webkit-scrollbar{display:none}
+  .filter-pill{flex-shrink:0;padding:5px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;background:rgba(255,255,255,0.06);color:var(--sub);border:1px solid transparent;transition:all .15s}.filter-pill.active{color:var(--accent);background:var(--accent-dim);border-color:rgba(129,140,248,0.3)}.filter-pill:active{transform:scale(0.95)}
   .filter-count{font-size:11px;color:var(--sub);padding:0 4px;font-weight:500;margin-bottom:6px}
-
-  /* List */
   .list-header{font-size:12px;color:var(--sub);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;padding:0 4px}
-  .expense-list{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px}
-  .expense-list::-webkit-scrollbar{width:0;height:0}
-  .expense-item{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px 14px 14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;transition:transform .15s}
-  .expense-item:active{transform:scale(0.98)}
-  .expense-item.credit{border-color:rgba(52,211,153,0.2);background:rgba(52,211,153,0.04)}
-  .expense-item.credit .expense-amount{color:var(--green)}
-  .expense-item.transfer{border-color:rgba(251,146,60,0.2);background:rgba(251,146,60,0.04)}
-  .expense-item.transfer .expense-amount{color:var(--orange)}
+  .expense-list{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px}.expense-list::-webkit-scrollbar{width:0;height:0}
+  .expense-item{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px 14px 14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;transition:transform .15s}.expense-item:active{transform:scale(0.98)}
+  .expense-item.credit{border-color:rgba(52,211,153,0.2);background:rgba(52,211,153,0.04)}.expense-item.credit .expense-amount{color:var(--green)}
+  .expense-item.transfer{border-color:rgba(251,146,60,0.2);background:rgba(251,146,60,0.04)}.expense-item.transfer .expense-amount{color:var(--orange)}
   .expense-cat-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
-  .expense-cat-icon.cat-Food{background:rgba(251,146,60,0.15)}
-  .expense-cat-icon.cat-Shopping{background:rgba(244,114,182,0.15)}
-  .expense-cat-icon.cat-Bills{background:rgba(96,165,250,0.15)}
-  .expense-cat-icon.cat-Transport{background:rgba(167,139,250,0.15)}
-  .expense-cat-icon.cat-Health{background:rgba(52,211,153,0.15)}
-  .expense-cat-icon.cat-Entertainment{background:rgba(251,191,36,0.15)}
-  .expense-cat-icon.cat-Others{background:rgba(148,163,184,0.15)}
-  .expense-cat-icon.cat-Income{background:rgba(52,211,153,0.15)}
-  .expense-cat-icon.cat-Transfer{background:rgba(251,146,60,0.15)}
-  .expense-info{flex:1;min-width:0}
-  .expense-desc{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .expense-cat-icon.cat-Food{background:rgba(251,146,60,0.15)}.expense-cat-icon.cat-Shopping{background:rgba(244,114,182,0.15)}.expense-cat-icon.cat-Bills{background:rgba(96,165,250,0.15)}.expense-cat-icon.cat-Transport{background:rgba(167,139,250,0.15)}.expense-cat-icon.cat-Health{background:rgba(52,211,153,0.15)}.expense-cat-icon.cat-Entertainment{background:rgba(251,191,36,0.15)}.expense-cat-icon.cat-Others{background:rgba(148,163,184,0.15)}.expense-cat-icon.cat-Income{background:rgba(52,211,153,0.15)}.expense-cat-icon.cat-Transfer{background:rgba(251,146,60,0.15)}
+  .expense-info{flex:1;min-width:0}.expense-desc{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .expense-meta{font-size:12px;color:var(--sub);margin-top:3px;font-weight:500;display:flex;gap:6px;align-items:center}
   .expense-bank-tag{font-size:10px;font-weight:700;background:var(--accent-dim);color:var(--accent);padding:1px 5px;border-radius:4px}
   .expense-amount{font-size:16px;font-weight:700;flex-shrink:0;margin-right:2px;letter-spacing:-0.3px}
-  .btn-delete{width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:none;color:var(--sub);font-size:16px;cursor:pointer;border-radius:12px;flex-shrink:0;transition:color .15s,background .15s}
-  .btn-delete:active{background:var(--red-dim);color:var(--red)}
-  .empty-state{text-align:center;color:var(--sub);padding:48px 20px;font-size:15px}
-  .empty-icon{font-size:44px;margin-bottom:14px;opacity:0.6}
-
-  /* Monthly Reset */
+  .btn-delete{width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:none;color:var(--sub);font-size:16px;cursor:pointer;border-radius:12px;flex-shrink:0;transition:color .15s,background .15s}.btn-delete:active{background:var(--red-dim);color:var(--red)}
+  .empty-state{text-align:center;color:var(--sub);padding:48px 20px;font-size:15px}.empty-icon{font-size:44px;margin-bottom:14px;opacity:0.6}
   .monthly-section{padding:14px 0;border-top:1px solid var(--border);margin-top:8px}
-  .btn-reset{width:100%;background:var(--accent-dim);color:var(--accent);border-radius:14px;padding:14px;min-height:50px;font-size:15px;font-weight:700;cursor:pointer;border:1px solid rgba(129,140,248,0.2);transition:transform .15s}
-  .btn-reset:active{transform:scale(0.98)}
-  .btn-nuke{width:100%;background:var(--red-dim);color:var(--red);border-radius:14px;padding:12px;min-height:44px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid rgba(248,113,113,0.2);transition:transform .15s;margin-top:8px}
-  .btn-nuke:active{transform:scale(0.98)}
+  .btn-reset{width:100%;background:var(--accent-dim);color:var(--accent);border-radius:14px;padding:14px;min-height:50px;font-size:15px;font-weight:700;cursor:pointer;border:1px solid rgba(129,140,248,0.2);transition:transform .15s}.btn-reset:active{transform:scale(0.98)}
+  .btn-nuke{width:100%;background:var(--red-dim);color:var(--red);border-radius:14px;padding:12px;min-height:44px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid rgba(248,113,113,0.2);transition:transform .15s;margin-top:8px}.btn-nuke:active{transform:scale(0.98)}
   .rollover-info{text-align:center;font-size:12px;color:var(--sub);margin-top:10px;font-weight:500}
-
-  /* Modals */
-  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center;z-index:100;opacity:0;pointer-events:none;transition:opacity .25s;padding:0 8px calc(var(--safe-bottom) + 8px)}
-  .modal-overlay.active{opacity:1;pointer-events:auto}
-  .modal{background:rgba(30,30,35,0.95);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border:1px solid rgba(255,255,255,0.1);border-radius:20px;width:100%;max-width:400px;padding:28px 22px;transform:translateY(30px);transition:transform .3s cubic-bezier(.4,0,.2,1)}
-  .modal-overlay.active .modal{transform:translateY(0)}
-  .modal h2{font-size:19px;font-weight:700;text-align:center;margin-bottom:8px}
-  .modal p{font-size:14px;color:var(--sub);text-align:center;margin-bottom:22px;line-height:1.5}
-  .modal .input{width:100%;margin-bottom:14px}
-  .modal label{display:block;font-size:12px;color:var(--sub);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
-  .modal-buttons{display:flex;gap:10px;margin-top:6px}
-  .modal-buttons button{flex:1;min-height:50px;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;transition:transform .15s}
-  .modal-buttons button:active{transform:scale(0.97)}
-  .btn-cancel{background:rgba(255,255,255,0.08);color:var(--text)}
-  .btn-confirm{background:linear-gradient(135deg,#818cf8,#6366f1);color:#fff;box-shadow:0 4px 15px rgba(99,102,241,0.3)}
-
-  /* Settings bank list */
-  .settings-bank-list{margin-bottom:14px}
-  .settings-bank-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
-  .settings-bank-row .input{min-height:38px;padding:8px 12px;font-size:14px}
-  .settings-bank-row .input:first-child{flex:0 0 45%}
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center;z-index:100;opacity:0;pointer-events:none;transition:opacity .25s;padding:0 8px calc(var(--safe-bottom) + 8px)}.modal-overlay.active{opacity:1;pointer-events:auto}
+  .modal{background:rgba(30,30,35,0.95);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border:1px solid rgba(255,255,255,0.1);border-radius:20px;width:100%;max-width:400px;padding:28px 22px;transform:translateY(30px);transition:transform .3s cubic-bezier(.4,0,.2,1)}.modal-overlay.active .modal{transform:translateY(0)}
+  .modal h2{font-size:19px;font-weight:700;text-align:center;margin-bottom:8px}.modal p{font-size:14px;color:var(--sub);text-align:center;margin-bottom:22px;line-height:1.5}
+  .modal .input{width:100%;margin-bottom:14px}.modal label{display:block;font-size:12px;color:var(--sub);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+  .modal-buttons{display:flex;gap:10px;margin-top:6px}.modal-buttons button{flex:1;min-height:50px;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;transition:transform .15s}.modal-buttons button:active{transform:scale(0.97)}
+  .btn-cancel{background:rgba(255,255,255,0.08);color:var(--text)}.btn-confirm{background:linear-gradient(135deg,#818cf8,#6366f1);color:#fff;box-shadow:0 4px 15px rgba(99,102,241,0.3)}
+  .settings-bank-list{margin-bottom:14px}.settings-bank-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}.settings-bank-row .input{min-height:38px;padding:8px 12px;font-size:14px}.settings-bank-row .input:first-child{flex:0 0 45%}
   .btn-remove-bank{width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:var(--red-dim);color:var(--red);border-radius:8px;font-size:14px;cursor:pointer;flex-shrink:0}
   .btn-add-bank{width:100%;background:var(--card2);color:var(--accent);border-radius:10px;padding:10px;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:14px}
-
-  /* Transfer modal */
-  .transfer-row{display:flex;gap:8px;align-items:center;margin-bottom:14px}
-  .transfer-row select.input{flex:1}
-  .transfer-arrow{color:var(--orange);font-size:18px;font-weight:700;flex-shrink:0}
+  .transfer-row{display:flex;gap:8px;align-items:center;margin-bottom:14px}.transfer-row select.input{flex:1}.transfer-arrow{color:var(--orange);font-size:18px;font-weight:700;flex-shrink:0}
+  .profile-list{margin-bottom:14px}.profile-item{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--card);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;cursor:pointer;transition:all .15s}.profile-item:active{transform:scale(0.98)}.profile-item.active{border-color:rgba(129,140,248,0.4);background:var(--accent-dim)}
+  .profile-avatar{width:36px;height:36px;border-radius:10px;background:var(--accent-dim);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0}.profile-name{flex:1;font-size:15px;font-weight:600}.profile-check{color:var(--accent);font-size:18px}
 </style>
 </head>
 <body>
-<div class="container">
-  <div class="header">
-    <h1>EXPENSE TRACKER</h1>
-    <button class="btn-settings" id="settingsBtn">&#9881;</button>
-  </div>
-
+<div class="loading-screen" id="loadingScreen"><div class="loading-spinner"></div><div class="loading-text">Loading database...</div></div>
+<div class="container hidden" id="appContainer">
+  <div class="header"><div class="header-left"><h1>EXPENSE TRACKER</h1><span class="header-user" id="headerUser"></span></div><div class="header-right"><button class="btn-icon" id="profileBtn">&#x1F464;</button><button class="btn-icon" id="settingsBtn">&#9881;</button></div></div>
   <div class="bank-strip" id="bankStrip"></div>
-
-  <div class="budget-display">
-    <div class="budget-row"><span class="budget-label">Total Budget</span><span class="budget-value" id="totalBudget"></span></div>
-    <div class="budget-row"><span class="budget-label">Spent</span><span class="budget-value spent" id="totalSpent"></span></div>
-    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
-    <div class="budget-row" style="margin-top:10px"><span class="budget-label">Remaining</span><span class="budget-value remaining" id="remaining"></span></div>
-  </div>
-
+  <div class="budget-display"><div class="budget-row"><span class="budget-label">Total Budget</span><span class="budget-value" id="totalBudget"></span></div><div class="budget-row"><span class="budget-label">Spent</span><span class="budget-value spent" id="totalSpent"></span></div><div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div><div class="budget-row" style="margin-top:10px"><span class="budget-label">Remaining</span><span class="budget-value remaining" id="remaining"></span></div></div>
   <div class="insights-section" id="insightsSection"></div>
-
-  <div class="form-card">
-    <div class="smart-row">
-      <input type="text" class="input" id="smartInput" placeholder="e.g. chai 30 SBI or uber 250" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-      <button class="btn-add" id="addBtn">Add</button>
-    </div>
-    <div class="form-controls" id="formControls">
-      <div class="type-pills">
-        <div class="type-pill expense active" id="pillExpense">Expense</div>
-        <div class="type-pill income" id="pillIncome">Income</div>
-      </div>
-      <div class="bank-select" id="bankSelectWrap"></div>
-      <button class="btn-transfer" id="transferBtn">&#8646; Transfer</button>
-    </div>
-    <div class="parse-preview" id="parsePreview">
-      <span class="parse-chip amount" id="previewAmt"></span>
-      <span class="parse-chip desc" id="previewDesc"></span>
-      <span class="parse-chip category" id="previewCat"></span>
-      <span class="parse-chip bank-tag" id="previewBank" style="display:none"></span>
-    </div>
-    <div class="cat-override" id="catOverride">
-      <select class="input" id="catSelect">
-        <option value="Food">&#x1F354; Food</option><option value="Shopping">&#x1F6CD;&#xFE0F; Shopping</option>
-        <option value="Bills">&#x1F4C4; Bills</option><option value="Transport">&#x1F697; Transport</option>
-        <option value="Health">&#x1F48A; Health</option><option value="Entertainment">&#x1F3AC; Entertainment</option>
-        <option value="Others">&#x1F4E6; Others</option>
-      </select>
-    </div>
-  </div>
-
+  <div class="form-card"><div class="smart-row"><input type="text" class="input" id="smartInput" placeholder="e.g. chai 30 SBI or uber 250" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"><button class="btn-add" id="addBtn">Add</button></div><div class="form-controls"><div class="type-pills"><div class="type-pill expense active" id="pillExpense">Expense</div><div class="type-pill income" id="pillIncome">Income</div></div><div class="bank-select" id="bankSelectWrap"></div><button class="btn-transfer" id="transferBtn">&#8646; Transfer</button></div><div class="parse-preview" id="parsePreview"><span class="parse-chip amount" id="previewAmt"></span><span class="parse-chip desc" id="previewDesc"></span><span class="parse-chip category" id="previewCat"></span><span class="parse-chip bank-tag" id="previewBank" style="display:none"></span></div><div class="cat-override" id="catOverride"><select class="input" id="catSelect"><option value="Food">&#x1F354; Food</option><option value="Shopping">&#x1F6CD;&#xFE0F; Shopping</option><option value="Bills">&#x1F4C4; Bills</option><option value="Transport">&#x1F697; Transport</option><option value="Health">&#x1F48A; Health</option><option value="Entertainment">&#x1F3AC; Entertainment</option><option value="Others">&#x1F4E6; Others</option></select></div></div>
   <div class="list-header">This Month's Expenses</div>
-  <div class="filter-section">
-    <div class="search-row">
-      <input type="text" class="search-input" id="searchInput" placeholder="&#x1F50D; Search expenses..." autocomplete="off" autocorrect="off">
-    </div>
-    <div class="filter-pills" id="filterPills"></div>
-    <div class="filter-count" id="filterCount"></div>
-  </div>
+  <div class="filter-section"><div class="search-row"><input type="text" class="search-input" id="searchInput" placeholder="&#x1F50D; Search expenses..." autocomplete="off" autocorrect="off"></div><div class="filter-pills" id="filterPills"></div><div class="filter-count" id="filterCount"></div></div>
   <div class="expense-list" id="expenseList"></div>
-
-  <div class="monthly-section">
-    <button class="btn-reset" id="resetBtn">&#8635; Reset Month &amp; Add Salary</button>
-    <button class="btn-nuke" id="nukeBtn">&#x1F5D1; Reset Everything &amp; Start Fresh</button>
-    <div class="rollover-info" id="rolloverInfo"></div>
-  </div>
+  <div class="monthly-section"><button class="btn-reset" id="resetBtn">&#8635; Reset Month &amp; Add Salary</button><button class="btn-nuke" id="nukeBtn">&#x1F5D1; Reset Everything &amp; Start Fresh</button><div class="rollover-info" id="rolloverInfo"></div></div>
 </div>
 
-<!-- Modals -->
-<div class="modal-overlay" id="nukeModal"><div class="modal"><h2>&#x26A0;&#xFE0F; Reset Everything?</h2><p>This will wipe ALL expenses, budget, rollover, and bank balances. Your bank account names will be kept but balances reset to 0. This cannot be undone.</p><div class="modal-buttons"><button class="btn-cancel" id="nukeCancel">Cancel</button><button class="btn-confirm" id="nukeConfirm" style="background:linear-gradient(135deg,#f87171,#dc2626);box-shadow:0 4px 15px rgba(248,113,113,0.3)">Reset Everything</button></div></div></div>
-
+<div class="modal-overlay" id="onboardModal"><div class="modal" style="text-align:center"><h2>&#x1F44B; Welcome!</h2><p>Let's set up your profile.</p><label>Your Name</label><input type="text" class="input" id="onboardName" placeholder="e.g. Manika"><div class="modal-buttons"><button class="btn-confirm" id="onboardConfirm">Get Started</button></div></div></div>
+<div class="modal-overlay" id="profileModal"><div class="modal" style="max-height:70vh;overflow-y:auto"><h2>&#x1F464; Profiles</h2><p>Switch or create profiles</p><div class="profile-list" id="profileList"></div><label>Add New Profile</label><div style="display:flex;gap:8px"><input type="text" class="input" id="newProfileName" placeholder="Name" style="margin-bottom:0"><button class="btn-confirm" id="addProfileBtn" style="flex:0 0 80px;min-height:44px;font-size:14px">Add</button></div><div class="modal-buttons" style="margin-top:14px"><button class="btn-cancel" id="profileClose">Close</button></div></div></div>
+<div class="modal-overlay" id="nukeModal"><div class="modal"><h2>&#x26A0;&#xFE0F; Reset Everything?</h2><p>Wipes ALL data for this profile. Bank names kept, balances reset to 0.</p><div class="modal-buttons"><button class="btn-cancel" id="nukeCancel">Cancel</button><button class="btn-confirm" id="nukeConfirm" style="background:linear-gradient(135deg,#f87171,#dc2626);box-shadow:0 4px 15px rgba(248,113,113,0.3)">Reset Everything</button></div></div></div>
 <div class="modal-overlay" id="confirmModal"><div class="modal"><h2>Start a New Month?</h2><p id="confirmText"></p><div class="modal-buttons"><button class="btn-cancel" id="confirmNo">Cancel</button><button class="btn-confirm" id="confirmYes">Continue</button></div></div></div>
-
 <div class="modal-overlay" id="salaryModal"><div class="modal"><h2>New Monthly Budget</h2><p id="salaryText"></p><input type="number" inputmode="decimal" class="input" id="salaryInput" placeholder="&#8377; Amount"><div class="modal-buttons"><button class="btn-cancel" id="salaryCancel">Cancel</button><button class="btn-confirm" id="salaryConfirm">Start Month</button></div></div></div>
-
 <div class="modal-overlay" id="ambiguityModal"><div class="modal"><h2>Is this income or expense?</h2><p id="ambiguityText"></p><div class="modal-buttons"><button class="btn-cancel" id="ambiguityExpense" style="background:var(--red-dim);color:var(--red)">Expense</button><button class="btn-confirm" id="ambiguityIncome" style="background:linear-gradient(135deg,#34d399,#059669);box-shadow:0 4px 15px rgba(52,211,153,0.3)">My Income</button></div></div></div>
+<div class="modal-overlay" id="transferModal"><div class="modal"><h2>&#8646; Transfer Between Accounts</h2><p>Move money between banks</p><input type="number" inputmode="decimal" class="input" id="transferAmount" placeholder="&#8377; Amount"><div class="transfer-row"><select class="input" id="transferFrom"></select><span class="transfer-arrow">&#8594;</span><select class="input" id="transferTo"></select></div><input type="text" class="input" id="transferNote" placeholder="Note (optional)"><div class="modal-buttons"><button class="btn-cancel" id="transferCancel">Cancel</button><button class="btn-confirm" id="transferConfirm" style="background:linear-gradient(135deg,#fb923c,#ea580c);box-shadow:0 4px 15px rgba(251,146,60,0.3)">Transfer</button></div></div></div>
+<div class="modal-overlay" id="settingsModal"><div class="modal" style="max-height:80vh;overflow-y:auto"><h2>&#9881; Settings</h2><p>Bank accounts and balances</p><div class="settings-bank-list" id="settingsBankList"></div><button class="btn-add-bank" id="addBankBtn">+ Add Bank Account</button><label style="margin-top:14px">Default Bank</label><select class="input" id="defaultBankSelect" style="margin-bottom:14px"></select><div class="modal-buttons"><button class="btn-cancel" id="settingsCancel">Cancel</button><button class="btn-confirm" id="settingsSave">Save</button></div></div></div>
 
-<div class="modal-overlay" id="transferModal"><div class="modal"><h2>&#8646; Transfer Between Accounts</h2><p>Move money from one bank to another</p><input type="number" inputmode="decimal" class="input" id="transferAmount" placeholder="&#8377; Amount"><div class="transfer-row"><select class="input" id="transferFrom"></select><span class="transfer-arrow">&#8594;</span><select class="input" id="transferTo"></select></div><input type="text" class="input" id="transferNote" placeholder="Note (optional)"><div class="modal-buttons"><button class="btn-cancel" id="transferCancel">Cancel</button><button class="btn-confirm" id="transferConfirm" style="background:linear-gradient(135deg,#fb923c,#ea580c);box-shadow:0 4px 15px rgba(251,146,60,0.3)">Transfer</button></div></div></div>
-
-<div class="modal-overlay" id="settingsModal"><div class="modal" style="max-height:80vh;overflow-y:auto"><h2>&#9881; Settings</h2><p>Set up your bank accounts and starting balances</p><div class="settings-bank-list" id="settingsBankList"></div><button class="btn-add-bank" id="addBankBtn">+ Add Bank Account</button><label style="margin-top:14px">Default Bank</label><select class="input" id="defaultBankSelect" style="margin-bottom:14px"></select><div class="modal-buttons"><button class="btn-cancel" id="settingsCancel">Cancel</button><button class="btn-confirm" id="settingsSave">Save</button></div></div></div>
-
-<script>
-(function() {
-  'use strict';
-
-  var ICONS = {Food:'\u{1F354}',Shopping:'\u{1F6CD}️',Bills:'\u{1F4C4}',Transport:'\u{1F697}',Health:'\u{1F48A}',Entertainment:'\u{1F3AC}',Others:'\u{1F4E6}',Income:'\u{1F4B0}',Transfer:'\u{1F504}'};
-  var CATEGORIES = ['Food','Shopping','Bills','Transport','Health','Entertainment','Others'];
-  var KEY = 'expenseTracker_v3';
-  var PATTERNS_KEY = 'expenseTracker_v3_patterns';
-  var BANKS_KEY = 'expenseTracker_v3_banks';
-
-  // ─── AMBIGUITY ─────────────────────────────────────────────────
-  var AMBIGUOUS_WORDS = ['salary','income','pay','payment','wages','bonus','incentive','stipend','freelance','commission','refund','cashback','reimbursement','dividend','interest','payout','earnings','honorarium','allowance','prize','reward'];
-  var EXPENSE_HINTS = ['cook','maid','driver','helper','nanny','watchman','guard','gardener','servant','staff'];
-
-  function isAmbiguousInput(desc) {
-    var words = desc.toLowerCase().split(/\s+/);
-    var hasAmb = false, hasHint = false;
-    for (var i = 0; i < words.length; i++) {
-      if (AMBIGUOUS_WORDS.indexOf(words[i]) !== -1) hasAmb = true;
-      if (EXPENSE_HINTS.indexOf(words[i]) !== -1) hasHint = true;
-    }
-    if (hasAmb && hasHint) return false;
-    return hasAmb;
-  }
-
-  // ─── KEYWORD RULE ENGINE ───────────────────────────────────────
-  var KEYWORDS = {
-    Food:['swiggy','zomato','chai','tea','coffee','starbucks','cafe','restaurant','hotel','mess','canteen','biryani','dosa','idli','pizza','dominos','burger','mcdonalds','kfc','subway','momos','noodles','maggi','thali','lunch','dinner','breakfast','snack','snacks','samosa','pani puri','juice','lassi','milkshake','ice cream','icecream','bakery','cake','sweet','mithai','fruits','fruit','vegetables','veggies','grocery','groceries','bigbasket','blinkit','zepto','instamart','dunzo','milk','bread','eggs','chicken','mutton','fish','meat','rice','dal','atta','oil','sugar','paneer','curd','butter','ghee','masala','food','eat','eating','bhel','vada pav','vadapav','pav bhaji','chole','paratha','roti','naan','tandoori','kebab','rolls','wrap','salad','soup','falooda','kulfi','rabri','jalebi','gulab jamun','rasgulla','barfi','ladoo','peda','halwa','kheer'],
-    Shopping:['amazon','flipkart','myntra','ajio','meesho','nykaa','snapdeal','dmart','reliance','big bazaar','bigbazaar','mall','shopping','clothes','clothing','shoes','sneakers','shirt','tshirt','jeans','dress','kurta','saree','jewellery','jewelry','watch','bag','purse','wallet','sunglasses','cosmetics','makeup','skincare','perfume','gadget','electronics','phone','laptop','headphones','earbuds','charger','cable','cover','case','appliance','furniture','decor','home','kitchen','utensils','crockery','towel','bedsheet','pillow','curtain','gift','present','toy','book','books','stationery','pen','notebook'],
-    Bills:['electricity','electric','bill','bills','wifi','broadband','internet','jio','airtel','vi','vodafone','idea','bsnl','recharge','mobile recharge','dth','tata sky','dish tv','rent','house rent','maintenance','society','water','gas','cylinder','lpg','piped gas','emi','loan','insurance','premium','lic','mutual fund','sip','tax','income tax','gst','property tax','credit card','cc payment','subscription','cloud','storage','icloud','google one','postpaid','prepaid','landline','municipal','sewage'],
-    Transport:['ola','uber','rapido','auto','rickshaw','cab','taxi','metro','bus','train','railway','irctc','flight','airplane','airline','indigo','spicejet','air india','vistara','petrol','diesel','fuel','cng','ev charging','charging','parking','toll','fastag','car wash','service','mechanic','tyre','tire','puncture','car','bike','scooter','cycle','bicycle','helmet','ride','travel','trip','makemytrip','goibibo','cleartrip','redbus','yatra','booking'],
-    Health:['pharmacy','medical','medicine','medicines','apollo','medplus','netmeds','pharmeasy','1mg','tata 1mg','doctor','hospital','clinic','dentist','eye','optician','glasses','lens','lab','test','blood test','xray','scan','mri','ct scan','ultrasound','gym','fitness','yoga','workout','protein','supplement','vitamin','ayurvedic','homeopathy','therapy','physio','physiotherapy','counseling','mental health','health','checkup','consultation','surgery','operation','ambulance','emergency','first aid','bandage','ointment','tablet','capsule','syrup','injection'],
-    Entertainment:['netflix','hotstar','disney','prime video','amazon prime','spotify','apple music','youtube','youtube premium','jiocinema','zee5','sonyliv','voot','mubi','crunchyroll','movie','movies','cinema','pvr','inox','multiplex','theatre','theater','concert','show','event','ticket','tickets','bookmyshow','game','gaming','playstation','ps5','xbox','nintendo','steam','pub','bar','club','nightclub','party','outing','picnic','amusement','theme park','water park','zoo','museum','bowling','arcade','karaoke','escape room','trampoline','adventure','sports','cricket','football','badminton','swimming','pool','beach','trek','trekking','camping','resort','spa'],
-    Others:['other','misc','miscellaneous','donation','charity','temple','church','mosque','gurudwara','puja','pooja','festival','diwali','holi','eid','christmas','birthday','anniversary','wedding','function','ceremony','tip','baksheesh','laundry','dry clean','ironing','tailor','salon','parlour','parlor','haircut','barber','spa','massage','facial','manicure','pedicure','pet','dog','cat','vet','veterinary','courier','delivery','postage','stamp','atm','bank charge','penalty','fine','challan','lost','stolen','damage','repair','plumber','electrician','carpenter','painter','pest control','cleaning','maid','cook','driver','helper']
-  };
-
-  var keywordMap = {};
-  CATEGORIES.forEach(function(cat) { (KEYWORDS[cat]||[]).forEach(function(kw) { keywordMap[kw.toLowerCase()] = cat; }); });
-
-  // ─── MICRO NEURAL NET ──────────────────────────────────────────
-  var TRIGRAM_VOCAB_SIZE = 256, HIDDEN_SIZE = 32, NUM_CLASSES = 7;
-  function seededRandom(seed) { var x = Math.sin(seed) * 10000; return x - Math.floor(x); }
-
-  function trigramVectorize(text) {
-    var vec = new Float32Array(TRIGRAM_VOCAB_SIZE);
-    var t = ' ' + text.toLowerCase().replace(/[^a-z0-9 ]/g, '') + ' ';
-    for (var i = 0; i < t.length - 2; i++) {
-      var hash = ((t.charCodeAt(i)*31+t.charCodeAt(i+1))*31+t.charCodeAt(i+2)) % TRIGRAM_VOCAB_SIZE;
-      if (hash < 0) hash += TRIGRAM_VOCAB_SIZE;
-      vec[hash] += 1;
-    }
-    var mx = 0;
-    for (var j = 0; j < TRIGRAM_VOCAB_SIZE; j++) if (vec[j] > mx) mx = vec[j];
-    if (mx > 0) for (var k = 0; k < TRIGRAM_VOCAB_SIZE; k++) vec[k] /= mx;
-    return vec;
-  }
-
-  function initWeights() {
-    var w1=[],b1=[],w2=[],b2=[],s=42;
-    for (var i=0;i<HIDDEN_SIZE;i++){w1[i]=[];for(var j=0;j<TRIGRAM_VOCAB_SIZE;j++)w1[i][j]=(seededRandom(s++)-0.5)*0.3;b1[i]=(seededRandom(s++)-0.5)*0.1;}
-    for (var c=0;c<NUM_CLASSES;c++){w2[c]=[];for(var h=0;h<HIDDEN_SIZE;h++)w2[c][h]=(seededRandom(s++)-0.5)*0.5;b2[c]=(seededRandom(s++)-0.5)*0.1;}
-    var examples={Food:['swiggy order','zomato food','chai tapri','biryani dinner','grocery store','lunch thali'],Shopping:['amazon purchase','flipkart order','mall shopping','nykaa beauty'],Bills:['electricity bill','wifi recharge','rent payment','emi installment'],Transport:['ola ride','uber cab','metro ticket','petrol pump','bus fare'],Health:['apollo pharmacy','doctor visit','gym membership','medicine tablets'],Entertainment:['netflix subscription','movie tickets','spotify premium','pvr cinema'],Others:['donation temple','laundry clothes','salon haircut','courier delivery']};
-    CATEGORIES.forEach(function(cat,ci){(examples[cat]||[]).forEach(function(ex){var v=trigramVectorize(ex);for(var hi=0;hi<HIDDEN_SIZE;hi++)for(var vi=0;vi<TRIGRAM_VOCAB_SIZE;vi++)if(v[vi]>0)w1[hi][vi]+=(seededRandom(s++)>0.5?0.08:-0.02)*v[vi];for(var xi=0;xi<NUM_CLASSES;xi++)for(var hj=0;hj<HIDDEN_SIZE;hj++)w2[xi][hj]+=(xi===ci?0.15:-0.03)*seededRandom(s++);b2[ci]+=0.3;});});
-    return {w1:w1,b1:b1,w2:w2,b2:b2};
-  }
-
-  function mlPredict(text,W){
-    var v=trigramVectorize(text),hid=new Float32Array(HIDDEN_SIZE);
-    for(var h=0;h<HIDDEN_SIZE;h++){var sm=W.b1[h];for(var vi=0;vi<TRIGRAM_VOCAB_SIZE;vi++)sm+=W.w1[h][vi]*v[vi];hid[h]=sm>0?sm:0;}
-    var logits=new Float32Array(NUM_CLASSES),mx=-Infinity;
-    for(var c=0;c<NUM_CLASSES;c++){var s2=W.b2[c];for(var hh=0;hh<HIDDEN_SIZE;hh++)s2+=W.w2[c][hh]*hid[hh];logits[c]=s2;if(s2>mx)mx=s2;}
-    var expS=0,probs=new Float32Array(NUM_CLASSES);
-    for(var p=0;p<NUM_CLASSES;p++){probs[p]=Math.exp(logits[p]-mx);expS+=probs[p];}
-    var bi=0,bp=0;for(var q=0;q<NUM_CLASSES;q++){probs[q]/=expS;if(probs[q]>bp){bp=probs[q];bi=q;}}
-    return {category:CATEGORIES[bi],confidence:bp};
-  }
-  var nnWeights = initWeights();
-
-  // ─── USER LEARNING ─────────────────────────────────────────────
-  function loadPatterns(){try{var d=localStorage.getItem(PATTERNS_KEY);return d?JSON.parse(d):{};}catch(e){return {};}}
-  function savePattern(desc,cat){var p=loadPatterns(),k=desc.toLowerCase().trim();if(!k)return;p[k]={category:cat,count:(p[k]?p[k].count+1:1)};localStorage.setItem(PATTERNS_KEY,JSON.stringify(p));}
-  function categorizeByHistory(desc){var p=loadPatterns(),k=desc.toLowerCase().trim();if(p[k]&&p[k].count>=1)return{category:p[k].category,confidence:1,source:'learned'};var ks=Object.keys(p);for(var i=0;i<ks.length;i++)if((k.indexOf(ks[i])!==-1||ks[i].indexOf(k)!==-1)&&p[ks[i]].count>=2)return{category:p[ks[i]].category,confidence:0.85,source:'learned'};return null;}
-
-  function categorize(desc){
-    if(!desc||!desc.trim())return{category:'Others',confidence:0,source:'default'};
-    var learned=categorizeByHistory(desc);if(learned)return learned;
-    var words=desc.toLowerCase().replace(/[^a-z0-9\s]/g,'').split(/\s+/);
-    for(var i=0;i<words.length-1;i++){var ph=words[i]+' '+words[i+1];if(keywordMap[ph])return{category:keywordMap[ph],confidence:1,source:'keyword'};}
-    for(var j=0;j<words.length;j++)if(keywordMap[words[j]])return{category:keywordMap[words[j]],confidence:1,source:'keyword'};
-    var ml=mlPredict(desc,nnWeights);if(ml.confidence>0.4)return{category:ml.category,confidence:ml.confidence,source:'ai'};
-    return{category:'Others',confidence:0.2,source:'default'};
-  }
-
-  // ─── BANK ACCOUNTS ─────────────────────────────────────────────
-  var DEFAULT_BANK_KEY = 'expenseTracker_v3_defaultBank';
-  function loadBanks(){try{var d=localStorage.getItem(BANKS_KEY);return d?JSON.parse(d):[];}catch(e){return [];}}
-  function saveBanks(banks){localStorage.setItem(BANKS_KEY,JSON.stringify(banks));}
-  function getBankNames(){return loadBanks().map(function(b){return b.name;});}
-  function getDefaultBank(){return localStorage.getItem(DEFAULT_BANK_KEY)||'';}
-  function setDefaultBank(name){localStorage.setItem(DEFAULT_BANK_KEY,name||'');}
-
-  function updateBankBalance(bankName, amount, isDebit) {
-    var banks = loadBanks();
-    for (var i = 0; i < banks.length; i++) {
-      if (banks[i].name === bankName) {
-        banks[i].balance = isDebit ? banks[i].balance - amount : banks[i].balance + amount;
-        saveBanks(banks);
-        return;
-      }
-    }
-  }
-
-  // ─── NLP PARSER ────────────────────────────────────────────────
-  function parseSmartInput(text) {
-    if (!text || !text.trim()) return null;
-    var t = text.trim();
-    t = t.replace(/^[₹$]\s*/i, '').replace(/^(rs\.?|inr)\s*/i, '');
-
-    var parts = t.split(/\s+/);
-    var amountMatch = null, amountIdx = -1;
-    var bankMatch = null, bankIdx = -1;
-    var bankNames = getBankNames();
-
-    // Detect bank name (can be multi-word like "SBI H")
-    // Check from longest possible match down
-    for (var len = Math.min(3, parts.length); len >= 1; len--) {
-      for (var start = 0; start <= parts.length - len; start++) {
-        var candidate = parts.slice(start, start + len).join(' ');
-        for (var bi = 0; bi < bankNames.length; bi++) {
-          if (candidate.toLowerCase() === bankNames[bi].toLowerCase()) {
-            bankMatch = bankNames[bi];
-            bankIdx = start;
-            len = 0; // break all loops
-            break;
-          }
-        }
-      }
-    }
-
-    // Detect transfer: "5000 SBI H to HDFC" or "5000 SBI H > HDFC"
-    var transferTo = null;
-    var transferKeyIdx = -1;
-    for (var ti = 0; ti < parts.length; ti++) {
-      if (parts[ti].toLowerCase() === 'to' || parts[ti] === '>' || parts[ti] === '->') {
-        // Check if text after this is a bank name
-        for (var tlen = Math.min(3, parts.length - ti - 1); tlen >= 1; tlen--) {
-          var tCandidate = parts.slice(ti + 1, ti + 1 + tlen).join(' ');
-          for (var tbi = 0; tbi < bankNames.length; tbi++) {
-            if (tCandidate.toLowerCase() === bankNames[tbi].toLowerCase()) {
-              transferTo = bankNames[tbi];
-              transferKeyIdx = ti;
-              tlen = 0;
-              break;
-            }
-          }
-        }
-        if (transferTo) break;
-      }
-    }
-
-    // Check for "transfer" keyword
-    var hasTransferWord = false;
-    for (var tw = 0; tw < parts.length; tw++) {
-      if (parts[tw].toLowerCase() === 'transfer') { hasTransferWord = true; break; }
-    }
-
-    // Find amount token (skip bank name indices)
-    var skipIndices = {};
-    if (bankIdx !== -1) {
-      var bWords = bankMatch.split(' ').length;
-      for (var si = bankIdx; si < bankIdx + bWords; si++) skipIndices[si] = true;
-    }
-    if (transferTo && transferKeyIdx !== -1) {
-      skipIndices[transferKeyIdx] = true;
-      var tWords = transferTo.split(' ').length;
-      for (var si2 = transferKeyIdx + 1; si2 < transferKeyIdx + 1 + tWords; si2++) skipIndices[si2] = true;
-    }
-
-    for (var ai = parts.length - 1; ai >= 0; ai--) {
-      if (skipIndices[ai]) continue;
-      if (parts[ai].toLowerCase() === 'transfer') continue;
-      var clean = parts[ai].replace(/,/g, '').replace(/^[₹$]/,'').replace(/^(rs\.?|inr)/i,'');
-      var lM = clean.match(/^(\d+\.?\d*)[lL]$/);
-      if (lM) { amountMatch = parseFloat(lM[1]) * 100000; amountIdx = ai; break; }
-      var kM = clean.match(/^(\d+\.?\d*)[kK]$/);
-      if (kM) { amountMatch = parseFloat(kM[1]) * 1000; amountIdx = ai; break; }
-      if (/^\d+\.?\d*$/.test(clean) && parseFloat(clean) > 0) { amountMatch = parseFloat(clean); amountIdx = ai; break; }
-    }
-
-    if (amountMatch === null) return null;
-
-    // Build description from remaining parts
-    var descParts = [];
-    skipIndices[amountIdx] = true;
-    for (var di = 0; di < parts.length; di++) {
-      if (skipIndices[di]) continue;
-      if (parts[di].toLowerCase() === 'transfer') continue;
-      descParts.push(parts[di]);
-    }
-    var desc = descParts.join(' ').replace(/^[₹$]\s*/,'').replace(/^(rs\.?|inr)\s*/i,'').replace(/^[-–—:,.\s]+/,'').replace(/[-–—:,.\s]+$/,'').trim();
-
-    var isTransfer = (hasTransferWord || transferTo) && bankMatch && transferTo;
-    var catResult = isTransfer ? {category:'Others',confidence:1,source:'default'} : categorize(desc || 'others');
-
-    return {
-      amount: amountMatch,
-      desc: desc || (isTransfer ? 'Transfer' : catResult.category),
-      category: catResult.category,
-      confidence: catResult.confidence,
-      source: catResult.source,
-      bank: bankMatch,
-      transferTo: transferTo,
-      isTransfer: isTransfer
-    };
-  }
-
-  // ─── INSIGHTS ──────────────────────────────────────────────────
-  function generateInsights(data) {
-    var insights = [];
-    if (data.budget <= 0 || data.expenses.length < 2) return insights;
-    var credits=0,debits=0;
-    data.expenses.forEach(function(e){if(e.type==='credit')credits+=e.amount;else if(e.type!=='transfer')debits+=e.amount;});
-    var spent=debits,totalBudget=data.budget+credits,remaining=totalBudget-debits,pctSpent=totalBudget>0?spent/totalBudget:0;
-    var debitExpenses=data.expenses.filter(function(e){return e.type!=='credit'&&e.type!=='transfer';});
-    if(debitExpenses.length<2)return insights;
-    var dates=debitExpenses.map(function(e){return e.date;}),earliest=Math.min.apply(null,dates),now=Date.now(),daysPassed=Math.max(1,Math.ceil((now-earliest)/86400000)),dailyRate=spent/daysPassed;
-    if(pctSpent>0.5&&daysPassed<15){var daysLeft=remaining>0?Math.ceil(remaining/dailyRate):0;if(daysLeft>0&&daysLeft<20)insights.push({icon:'⚡',text:'Budget runs out in ~'+daysLeft+' days at this pace',type:'alert'});}
-    if(pctSpent>0.8)insights.push({icon:'\u{1F6A8}',text:'Used '+Math.round(pctSpent*100)+'% of budget',type:'alert'});
-    var catTotals={};debitExpenses.forEach(function(e){catTotals[e.category]=(catTotals[e.category]||0)+e.amount;});
-    var topCat='',topAmt=0;Object.keys(catTotals).forEach(function(c){if(catTotals[c]>topAmt){topAmt=catTotals[c];topCat=c;}});
-    if(topCat&&topAmt/spent>0.4)insights.push({icon:ICONS[topCat]||'\u{1F4CA}',text:topCat+': '+Math.round(topAmt/spent*100)+'% of spending',type:'neutral'});
-    if(pctSpent<0.3&&daysPassed>7)insights.push({icon:'\u{1F31F}',text:'Great pace! Only '+Math.round(pctSpent*100)+'% spent in '+daysPassed+' days',type:'good'});
-    if(debitExpenses.length>=3)insights.push({icon:'\u{1F4C8}',text:'Avg: ₹'+Math.round(dailyRate).toLocaleString('en-IN')+'/day ('+debitExpenses.length+' expenses)',type:'neutral'});
-    return insights.slice(0,3);
-  }
-
-  // ─── CORE APP ──────────────────────────────────────────────────
-  function load(){try{var d=localStorage.getItem(KEY);return d?JSON.parse(d):{budget:0,expenses:[],rollover:0};}catch(e){return{budget:0,expenses:[],rollover:0};}}
-  function save(data){localStorage.setItem(KEY,JSON.stringify(data));}
-  function fmt(n){return '₹'+Number(n).toLocaleString('en-IN',{minimumFractionDigits:0,maximumFractionDigits:2});}
-  function el(tag,cls){var n=document.createElement(tag);if(cls)n.className=cls;return n;}
-
-  var entryType = 'expense'; // 'expense' or 'credit'
-  var currentParsed = null;
-  var pendingAmbiguous = null;
-  var activeFilter = 'All';
-  var searchQuery = '';
-
-  function renderBankStrip() {
-    var strip = document.getElementById('bankStrip');
-    strip.textContent = '';
-    var banks = loadBanks();
-    if (banks.length === 0) return;
-    banks.forEach(function(bank) {
-      var chip = el('div', 'bank-chip');
-      var name = el('div', 'bank-chip-name');
-      name.textContent = bank.name;
-      chip.appendChild(name);
-      var bal = el('div', 'bank-chip-bal' + (bank.balance < 0 ? ' negative' : ''));
-      bal.textContent = fmt(bank.balance);
-      chip.appendChild(bal);
-      strip.appendChild(chip);
-    });
-  }
-
-  function renderBankSelect() {
-    var wrap = document.getElementById('bankSelectWrap');
-    wrap.textContent = '';
-    var banks = loadBanks();
-    if (banks.length === 0) return;
-    var sel = el('select', 'input');
-    sel.id = 'bankInput';
-    sel.style.cssText = 'min-height:34px;padding:6px 32px 6px 10px;font-size:13px;font-weight:600;border-radius:10px';
-    sel.setAttribute('style', sel.style.cssText + ";background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237c7c82' stroke-width='1.5' fill='none'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px");
-    var none = el('option');
-    none.value = '';
-    none.textContent = '\u{1F3E6} No Bank';
-    sel.appendChild(none);
-    var def = getDefaultBank();
-    banks.forEach(function(b) {
-      var opt = el('option');
-      opt.value = b.name;
-      opt.textContent = '\u{1F3E6} ' + b.name;
-      sel.appendChild(opt);
-    });
-    if (def) sel.value = def;
-    wrap.appendChild(sel);
-  }
-
-  function createExpenseItem(expense, idx) {
-    var isCredit = expense.type === 'credit';
-    var isTransfer = expense.type === 'transfer';
-    var itemClass = 'expense-item' + (isCredit ? ' credit' : '') + (isTransfer ? ' transfer' : '');
-    var item = el('div', itemClass);
-    var catKey = isCredit ? 'Income' : (isTransfer ? 'Transfer' : expense.category);
-    var icon = el('div', 'expense-cat-icon cat-' + catKey);
-    icon.textContent = isCredit ? ICONS.Income : (isTransfer ? ICONS.Transfer : (ICONS[expense.category] || '\u{1F4E6}'));
-    item.appendChild(icon);
-
-    var info = el('div', 'expense-info');
-    var desc = el('div', 'expense-desc');
-    desc.textContent = expense.desc;
-    info.appendChild(desc);
-    var meta = el('div', 'expense-meta');
-    var catSpan = document.createTextNode(isCredit ? 'Income' : (isTransfer ? 'Transfer' : expense.category));
-    meta.appendChild(catSpan);
-    if (expense.bank) {
-      var bankTag = el('span', 'expense-bank-tag');
-      bankTag.textContent = expense.bank;
-      meta.appendChild(bankTag);
-    }
-    if (expense.transferTo) {
-      var arrow = document.createTextNode(' → ');
-      meta.appendChild(arrow);
-      var toTag = el('span', 'expense-bank-tag');
-      toTag.textContent = expense.transferTo;
-      meta.appendChild(toTag);
-    }
-    info.appendChild(meta);
-    item.appendChild(info);
-
-    var amount = el('div', 'expense-amount');
-    amount.textContent = (isCredit ? '+' : (isTransfer ? '' : '-')) + fmt(expense.amount);
-    item.appendChild(amount);
-
-    var delBtn = el('button', 'btn-delete');
-    delBtn.textContent = '✕';
-    delBtn.setAttribute('aria-label', 'Delete');
-    delBtn.dataset.idx = idx;
-    item.appendChild(delBtn);
-    return item;
-  }
-
-  function renderInsights(data) {
-    var section = document.getElementById('insightsSection');
-    section.textContent = '';
-    generateInsights(data).forEach(function(ins) {
-      var card = el('div', 'insight-card' + (ins.type === 'alert' ? ' alert' : ins.type === 'good' ? ' good' : ''));
-      var ic = el('span', 'insight-icon'); ic.textContent = ins.icon; card.appendChild(ic);
-      var txt = el('span', 'insight-text'); txt.textContent = ins.text; card.appendChild(txt);
-      var dis = el('button', 'insight-dismiss'); dis.textContent = '✕';
-      dis.addEventListener('click', function() { card.style.display = 'none'; });
-      card.appendChild(dis); section.appendChild(card);
-    });
-  }
-
-  function render() {
-    var data = load();
-    var credits = 0, debits = 0;
-    data.expenses.forEach(function(e) { if (e.type === 'credit') credits += e.amount; else if (e.type !== 'transfer') debits += e.amount; });
-    var remaining = data.budget + credits - debits;
-
-    document.getElementById('totalBudget').textContent = fmt(data.budget + credits);
-    document.getElementById('totalSpent').textContent = fmt(debits);
-    var remEl = document.getElementById('remaining');
-    remEl.textContent = fmt(remaining);
-    remEl.classList.toggle('negative', remaining < 0);
-
-    var totalBudget = data.budget + credits;
-    var pct = totalBudget > 0 ? Math.min((debits / totalBudget) * 100, 100) : 0;
-    var fill = document.getElementById('progressFill');
-    fill.style.width = pct + '%';
-    fill.classList.toggle('over', remaining < 0);
-
-    // Build filter pills
-    var pillsContainer = document.getElementById('filterPills');
-    pillsContainer.textContent = '';
-    var allTypes = ['All','Food','Shopping','Bills','Transport','Health','Entertainment','Others','Income','Transfer'];
-    var catCounts = {All: data.expenses.length};
-    data.expenses.forEach(function(e) {
-      var key = e.type === 'credit' ? 'Income' : (e.type === 'transfer' ? 'Transfer' : e.category);
-      catCounts[key] = (catCounts[key] || 0) + 1;
-    });
-    allTypes.forEach(function(t) {
-      if (t !== 'All' && !catCounts[t]) return;
-      var pill = el('div', 'filter-pill' + (activeFilter === t ? ' active' : ''));
-      pill.textContent = t + (catCounts[t] ? ' (' + catCounts[t] + ')' : '');
-      pill.dataset.filter = t;
-      pillsContainer.appendChild(pill);
-    });
-
-    // Filter expenses
-    var filtered = [];
-    var query = searchQuery.toLowerCase();
-    for (var fi = data.expenses.length - 1; fi >= 0; fi--) {
-      var exp = data.expenses[fi];
-      var expType = exp.type === 'credit' ? 'Income' : (exp.type === 'transfer' ? 'Transfer' : exp.category);
-      if (activeFilter !== 'All' && expType !== activeFilter) continue;
-      if (query) {
-        var haystack = (exp.desc + ' ' + (exp.category || '') + ' ' + (exp.bank || '') + ' ' + (exp.transferTo || '')).toLowerCase();
-        if (haystack.indexOf(query) === -1) continue;
-      }
-      filtered.push({ expense: exp, idx: fi });
-    }
-
-    var list = document.getElementById('expenseList');
-    list.textContent = '';
-    var countEl = document.getElementById('filterCount');
-
-    if (data.expenses.length === 0) {
-      countEl.textContent = '';
-      var empty = el('div', 'empty-state');
-      var emIcon = el('div', 'empty-icon'); emIcon.textContent = '\u{1F4DD}'; empty.appendChild(emIcon);
-      empty.appendChild(document.createTextNode('No expenses yet this month'));
-      list.appendChild(empty);
-    } else if (filtered.length === 0) {
-      countEl.textContent = 'No matches';
-      var noMatch = el('div', 'empty-state');
-      noMatch.appendChild(document.createTextNode('No expenses match your filter'));
-      list.appendChild(noMatch);
-    } else {
-      countEl.textContent = filtered.length + ' of ' + data.expenses.length + ' entries';
-      for (var ri = 0; ri < filtered.length; ri++) list.appendChild(createExpenseItem(filtered[ri].expense, filtered[ri].idx));
-    }
-
-    document.getElementById('rolloverInfo').textContent = data.rollover > 0 ? 'Includes ' + fmt(data.rollover) + ' rolled over' : '';
-    renderInsights(data);
-    renderBankStrip();
-    // Reset bank dropdown to default after each render
-    var bankSel = document.getElementById('bankInput');
-    if (bankSel) bankSel.value = getDefaultBank();
-  }
-
-  function updatePreview() {
-    var text = document.getElementById('smartInput').value;
-    var preview = document.getElementById('parsePreview');
-    var parsed = parseSmartInput(text);
-    currentParsed = parsed;
-
-    if (!parsed) { preview.classList.remove('visible'); document.getElementById('catOverride').classList.remove('visible'); return; }
-    preview.classList.add('visible');
-    document.getElementById('previewAmt').textContent = fmt(parsed.amount);
-    document.getElementById('previewDesc').textContent = parsed.desc;
-
-    var catChip = document.getElementById('previewCat');
-    catChip.textContent = '';
-    if (parsed.isTransfer) {
-      catChip.className = 'parse-chip category cat-Others';
-      catChip.appendChild(document.createTextNode('\u{1F504} Transfer'));
-    } else if (isAmbiguousInput(parsed.desc) && entryType === 'expense') {
-      catChip.className = 'parse-chip category cat-Others';
-      catChip.appendChild(document.createTextNode('\u{1F914} Income or Expense?'));
-    } else {
-      catChip.className = 'parse-chip category cat-' + parsed.category;
-      catChip.appendChild(document.createTextNode(ICONS[parsed.category] + ' ' + parsed.category + ' '));
-      if (parsed.source === 'ai' || parsed.source === 'keyword' || parsed.source === 'learned') {
-        var badge = el('span', 'ai-badge'); badge.textContent = parsed.source === 'learned' ? 'YOU' : 'AI'; catChip.appendChild(badge);
-      }
-    }
-
-    // Bank preview
-    var bankChip = document.getElementById('previewBank');
-    var bankSel = document.getElementById('bankInput');
-    if (parsed.bank) {
-      bankChip.textContent = '\u{1F3E6} ' + parsed.bank;
-      bankChip.style.display = '';
-      if (bankSel) bankSel.value = parsed.bank;
-    } else {
-      bankChip.style.display = 'none';
-    }
-
-    document.getElementById('catSelect').value = parsed.category;
-  }
-
-  function commitEntry(parsed, finalCategory, type, bank, transferTo) {
-    if (type !== 'transfer') savePattern(parsed.desc, finalCategory);
-    var data = load();
-    var entry = { amount: parsed.amount, desc: parsed.desc, category: finalCategory, type: type, date: Date.now() };
-    if (bank) entry.bank = bank;
-    if (transferTo) entry.transferTo = transferTo;
-    data.expenses.push(entry);
-    save(data);
-
-    // Update bank balances
-    if (bank && type === 'expense') updateBankBalance(bank, parsed.amount, true);
-    if (bank && type === 'credit') updateBankBalance(bank, parsed.amount, false);
-    if (type === 'transfer' && bank && transferTo) {
-      updateBankBalance(bank, parsed.amount, true);
-      updateBankBalance(transferTo, parsed.amount, false);
-    }
-
-    document.getElementById('smartInput').value = '';
-    currentParsed = null;
-    document.getElementById('parsePreview').classList.remove('visible');
-    document.getElementById('catOverride').classList.remove('visible');
-    // Reset bank dropdown to default
-    var bankSel = document.getElementById('bankInput');
-    if (bankSel) bankSel.value = getDefaultBank();
-    document.getElementById('smartInput').focus();
-    render();
-  }
-
-  function addExpense() {
-    var input = document.getElementById('smartInput');
-    var text = input.value.trim();
-    if (!text) return;
-
-    var parsed = currentParsed || parseSmartInput(text);
-    if (!parsed || !parsed.amount || parsed.amount <= 0) return;
-
-    var overrideEl = document.getElementById('catOverride');
-    var finalCategory = parsed.category;
-    if (overrideEl.classList.contains('visible')) finalCategory = document.getElementById('catSelect').value;
-
-    var bankSel = document.getElementById('bankInput');
-    var dropdownBank = bankSel ? bankSel.value : '';
-    var bank = parsed.bank || dropdownBank || getDefaultBank() || null;
-
-    // Transfer via smart input
-    if (parsed.isTransfer) {
-      commitEntry(parsed, 'Others', 'transfer', parsed.bank, parsed.transferTo);
-      return;
-    }
-
-    // Ambiguity check (only in expense mode)
-    if (entryType === 'expense' && isAmbiguousInput(parsed.desc)) {
-      pendingAmbiguous = { parsed: parsed, category: finalCategory, bank: bank };
-      document.getElementById('ambiguityText').textContent = '"' + parsed.desc + '" for ' + fmt(parsed.amount) + ' — is this your income or someone else\'s expense?';
-      openModal('ambiguityModal');
-      return;
-    }
-
-    commitEntry(parsed, finalCategory, entryType, bank, null);
-  }
-
-  function deleteExpense(idx) {
-    var data = load();
-    if (idx < 0 || idx >= data.expenses.length) return;
-    var removed = data.expenses[idx];
-    // Reverse bank balance change
-    if (removed.bank) {
-      if (removed.type === 'expense') updateBankBalance(removed.bank, removed.amount, false);
-      else if (removed.type === 'credit') updateBankBalance(removed.bank, removed.amount, true);
-      else if (removed.type === 'transfer') {
-        updateBankBalance(removed.bank, removed.amount, false);
-        if (removed.transferTo) updateBankBalance(removed.transferTo, removed.amount, true);
-      }
-    }
-    data.expenses.splice(idx, 1);
-    save(data);
-    render();
-  }
-
-  function getLeftover() {
-    var data = load(), cr = 0, db = 0;
-    data.expenses.forEach(function(e) { if (e.type === 'credit') cr += e.amount; else if (e.type !== 'transfer') db += e.amount; });
-    return Math.max(data.budget + cr - db, 0);
-  }
-
-  function openModal(id) { document.getElementById(id).classList.add('active'); }
-  function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-
-  // ─── SETTINGS ──────────────────────────────────────────────────
-  function renderSettingsModal() {
-    var list = document.getElementById('settingsBankList');
-    list.textContent = '';
-    var banks = loadBanks();
-    banks.forEach(function(bank, idx) {
-      var row = el('div', 'settings-bank-row');
-      var nameInput = el('input', 'input');
-      nameInput.type = 'text'; nameInput.value = bank.name; nameInput.placeholder = 'Bank name';
-      nameInput.dataset.idx = idx; nameInput.dataset.field = 'name';
-      row.appendChild(nameInput);
-      var balInput = el('input', 'input');
-      balInput.type = 'number'; balInput.inputMode = 'decimal'; balInput.value = bank.balance; balInput.placeholder = 'Balance';
-      balInput.dataset.idx = idx; balInput.dataset.field = 'balance';
-      row.appendChild(balInput);
-      var rmBtn = el('button', 'btn-remove-bank');
-      rmBtn.textContent = '✕'; rmBtn.dataset.idx = idx;
-      rmBtn.addEventListener('click', function() { row.remove(); updateDefaultBankDropdown(); });
-      row.appendChild(rmBtn);
-      list.appendChild(row);
-    });
-    updateDefaultBankDropdown();
-  }
-
-  function updateDefaultBankDropdown() {
-    var sel = document.getElementById('defaultBankSelect');
-    sel.textContent = '';
-    var noneOpt = el('option'); noneOpt.value = ''; noneOpt.textContent = 'None — always ask'; sel.appendChild(noneOpt);
-    var rows = document.querySelectorAll('#settingsBankList .settings-bank-row');
-    rows.forEach(function(row) {
-      var name = row.querySelector('input').value.trim();
-      if (name) { var opt = el('option'); opt.value = name; opt.textContent = name; sel.appendChild(opt); }
-    });
-    sel.value = getDefaultBank();
-  }
-
-  function saveSettingsFromModal() {
-    var rows = document.querySelectorAll('#settingsBankList .settings-bank-row');
-    var banks = [];
-    rows.forEach(function(row) {
-      var inputs = row.querySelectorAll('input');
-      var name = inputs[0].value.trim();
-      var balance = parseFloat(inputs[1].value) || 0;
-      if (name) banks.push({ name: name, balance: balance });
-    });
-    saveBanks(banks);
-    setDefaultBank(document.getElementById('defaultBankSelect').value);
-    renderBankSelect();
-    render();
-    closeModal('settingsModal');
-  }
-
-  // ─── TRANSFER MODAL ────────────────────────────────────────────
-  function renderTransferSelects() {
-    var banks = loadBanks();
-    ['transferFrom', 'transferTo'].forEach(function(id) {
-      var sel = document.getElementById(id);
-      sel.textContent = '';
-      banks.forEach(function(b) {
-        var opt = el('option'); opt.value = b.name; opt.textContent = b.name + ' (' + fmt(b.balance) + ')';
-        sel.appendChild(opt);
-      });
-    });
-  }
-
-  // ─── EVENT LISTENERS ───────────────────────────────────────────
-  // Filter pills (event delegation)
-  document.getElementById('filterPills').addEventListener('click', function(e) {
-    var pill = e.target.closest('.filter-pill');
-    if (!pill) return;
-    activeFilter = pill.dataset.filter;
-    render();
-  });
-
-  // Search
-  var searchDebounce = null;
-  document.getElementById('searchInput').addEventListener('input', function() {
-    var self = this;
-    clearTimeout(searchDebounce);
-    searchDebounce = setTimeout(function() { searchQuery = self.value.trim(); render(); }, 200);
-  });
-
-  var debounceTimer = null;
-  document.getElementById('smartInput').addEventListener('input', function() {
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(updatePreview, 150);
-  });
-  document.getElementById('smartInput').addEventListener('keydown', function(e) { if (e.key === 'Enter') addExpense(); });
-  document.getElementById('addBtn').addEventListener('click', addExpense);
-
-  // Type pills
-  document.getElementById('pillExpense').addEventListener('click', function() {
-    entryType = 'expense';
-    this.classList.add('active');
-    document.getElementById('pillIncome').classList.remove('active');
-    updatePreview();
-  });
-  document.getElementById('pillIncome').addEventListener('click', function() {
-    entryType = 'credit';
-    this.classList.add('active');
-    document.getElementById('pillExpense').classList.remove('active');
-    updatePreview();
-  });
-
-  document.getElementById('previewCat').addEventListener('click', function() {
-    document.getElementById('catOverride').classList.toggle('visible');
-  });
-
-  document.getElementById('expenseList').addEventListener('click', function(e) {
-    var btn = e.target.closest('.btn-delete');
-    if (btn) deleteExpense(parseInt(btn.dataset.idx, 10));
-  });
-
-  // Reset flow
-  document.getElementById('resetBtn').addEventListener('click', function() {
-    var lo = getLeftover();
-    document.getElementById('confirmText').textContent = lo > 0
-      ? 'You have ' + fmt(lo) + ' remaining. It will roll over.'
-      : 'No leftover to roll over. Starting fresh.';
-    openModal('confirmModal');
-  });
-  document.getElementById('confirmYes').addEventListener('click', function() {
-    closeModal('confirmModal');
-    document.getElementById('salaryInput').value = '';
-    var lo = getLeftover();
-    document.getElementById('salaryText').textContent = lo > 0 ? 'Rollover: ' + fmt(lo) + '. Enter new salary.' : 'Enter your salary or budget.';
-    openModal('salaryModal');
-    setTimeout(function() { document.getElementById('salaryInput').focus(); }, 300);
-  });
-  document.getElementById('confirmNo').addEventListener('click', function() { closeModal('confirmModal'); });
-  document.getElementById('salaryCancel').addEventListener('click', function() { closeModal('salaryModal'); });
-  document.getElementById('salaryConfirm').addEventListener('click', function() {
-    var sal = parseFloat(document.getElementById('salaryInput').value);
-    if (!sal || sal <= 0) return;
-    var lo = getLeftover();
-    save({ budget: sal + lo, expenses: [], rollover: lo });
-    // Credit salary to default bank
-    var defBank = getDefaultBank();
-    if (defBank) updateBankBalance(defBank, sal, false);
-    closeModal('salaryModal');
-    render();
-  });
-  document.getElementById('salaryInput').addEventListener('keydown', function(e) { if (e.key === 'Enter') document.getElementById('salaryConfirm').click(); });
-
-  // Ambiguity modal
-  document.getElementById('ambiguityIncome').addEventListener('click', function() {
-    closeModal('ambiguityModal');
-    if (pendingAmbiguous) { commitEntry(pendingAmbiguous.parsed, 'Others', 'credit', pendingAmbiguous.bank, null); pendingAmbiguous = null; }
-  });
-  document.getElementById('ambiguityExpense').addEventListener('click', function() {
-    closeModal('ambiguityModal');
-    if (pendingAmbiguous) { commitEntry(pendingAmbiguous.parsed, pendingAmbiguous.category, 'expense', pendingAmbiguous.bank, null); pendingAmbiguous = null; }
-  });
-
-  // Transfer modal
-  document.getElementById('transferBtn').addEventListener('click', function() {
-    var banks = loadBanks();
-    if (banks.length < 2) { alert('Add at least 2 bank accounts in Settings first.'); return; }
-    document.getElementById('transferAmount').value = '';
-    document.getElementById('transferNote').value = '';
-    renderTransferSelects();
-    openModal('transferModal');
-    setTimeout(function() { document.getElementById('transferAmount').focus(); }, 300);
-  });
-  document.getElementById('transferCancel').addEventListener('click', function() { closeModal('transferModal'); });
-  document.getElementById('transferConfirm').addEventListener('click', function() {
-    var amt = parseFloat(document.getElementById('transferAmount').value);
-    if (!amt || amt <= 0) return;
-    var from = document.getElementById('transferFrom').value;
-    var to = document.getElementById('transferTo').value;
-    if (!from || !to || from === to) return;
-    var note = document.getElementById('transferNote').value.trim() || (from + ' → ' + to);
-    commitEntry({ amount: amt, desc: note }, 'Others', 'transfer', from, to);
-    closeModal('transferModal');
-  });
-  document.getElementById('transferAmount').addEventListener('keydown', function(e) { if (e.key === 'Enter') document.getElementById('transferConfirm').click(); });
-
-  // Settings modal
-  document.getElementById('settingsBtn').addEventListener('click', function() { renderSettingsModal(); openModal('settingsModal'); });
-  document.getElementById('settingsCancel').addEventListener('click', function() { closeModal('settingsModal'); });
-  document.getElementById('settingsSave').addEventListener('click', saveSettingsFromModal);
-  document.getElementById('addBankBtn').addEventListener('click', function() {
-    var list = document.getElementById('settingsBankList');
-    var row = el('div', 'settings-bank-row');
-    var nameInput = el('input', 'input');
-    nameInput.type = 'text'; nameInput.placeholder = 'e.g. SBI H';
-    row.appendChild(nameInput);
-    var balInput = el('input', 'input');
-    balInput.type = 'number'; balInput.inputMode = 'decimal'; balInput.placeholder = 'Balance';
-    row.appendChild(balInput);
-    var rmBtn = el('button', 'btn-remove-bank');
-    rmBtn.textContent = '✕';
-    rmBtn.addEventListener('click', function() { row.remove(); });
-    row.appendChild(rmBtn);
-    list.appendChild(row);
-    nameInput.focus();
-  });
-
-  // Close modals on overlay tap
-  document.querySelectorAll('.modal-overlay').forEach(function(ov) {
-    ov.addEventListener('click', function(e) { if (e.target === ov) closeModal(ov.id); });
-  });
-
-  // Nuke / full reset
-  document.getElementById('nukeBtn').addEventListener('click', function() { openModal('nukeModal'); });
-  document.getElementById('nukeCancel').addEventListener('click', function() { closeModal('nukeModal'); });
-  document.getElementById('nukeConfirm').addEventListener('click', function() {
-    // Reset expenses and budget
-    save({ budget: 0, expenses: [], rollover: 0 });
-    // Reset bank balances to 0 but keep names
-    var banks = loadBanks();
-    banks.forEach(function(b) { b.balance = 0; });
-    saveBanks(banks);
-    // Clear learned patterns
-    localStorage.removeItem(PATTERNS_KEY);
-    // Reset filter/search
-    activeFilter = 'All';
-    searchQuery = '';
-    document.getElementById('searchInput').value = '';
-    closeModal('nukeModal');
-    renderBankSelect();
-    render();
-  });
-
-  renderBankSelect();
-  render();
-})();
-</script>
+<script src="app-sql.js"></script>
 </body>
 </html>
